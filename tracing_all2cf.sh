@@ -5,7 +5,7 @@
 
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-
+#dest of cf card hardcoded
 DEST=/data/traces
 HOSTNAME=$(cat /proc/sys/kernel/hostname | cut -d'-' -f1)
 
@@ -13,7 +13,7 @@ Save_config() {
 	/sbin/uci show > ${DEST}/${TITLE}-uci.conf
 	/sbin/sysctl -A 2>&1 > ${DEST}/${TITLE}-sysctl.conf
 	/bin/date > ${DEST}/${TITLE}-date.conf
-	cat /sys/kernel/debug/ieee80211/phy0/ath5k/ani > ${DEST}/${TITLE}-ani.conf
+	[ -f /sys/kernel/debug/ieee80211/phy0/ath5k/ani ] && cat /sys/kernel/debug/ieee80211/phy0/ath5k/ani > ${DEST}/${TITLE}-ani.conf
 	tar -cvf ${DEST}/${TITLE}-node_configuration.tar ${DEST}/${TITLE}*.conf &> /dev/null
 	rm -rf ${DEST}/${TITLE}*.conf
 }
