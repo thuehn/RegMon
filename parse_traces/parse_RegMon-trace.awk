@@ -47,9 +47,20 @@ else if (NR > 1) {
     #mac_diff
     if (sprintf("%d", "0x" $3) + 0 > mac_old + 0) {
 		mac_diff		= sprintf("%d", "0x" $3) - mac_old;
-	    tx_diff			= sprintf("%d", "0x" $4) - tx_old;
-	    rx_diff			= sprintf("%d", "0x" $5) - rx_old;
-	    ed_diff			= sprintf("%d", "0x" $6) - ed_old;
+		if (sprintf("%d", "0x" $4) - tx_old  <= mac_diff +0)
+	    	tx_diff			= sprintf("%d", "0x" $4) - tx_old;
+		else
+			tx_diff = 0;
+			
+		if (sprintf("%d", "0x" $5) - rx_old <= mac_diff)
+			rx_diff			= sprintf("%d", "0x" $5) - rx_old;
+		else
+			rx_diff = o;
+			
+		if (sprintf("%d", "0x" $6) - ed_old <= mac_diff)
+			ed_diff			= sprintf("%d", "0x" $6) - ed_old;
+		else
+			ed_diff = o;
     }
     else {
 	    pot_reset	= 1;
