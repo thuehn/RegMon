@@ -70,7 +70,7 @@ else if (NR > 1) {
 		tx_paket	= 1;
 		tx_airtime	= tx_diff + (read_duration - 2) * MHz;
 	}
-	else if (tx_diff > 0 && tx_paket == 1){
+	else if (tx_diff == mac_diff && tx_paket == 1){
 		tx_start	= 0;
 		#check if MIB reset
 		if (pot_reset == 1)
@@ -78,9 +78,10 @@ else if (NR > 1) {
 		else
 			tx_airtime	= tx_airtime + tx_diff + (read_duration -2) * MHz;
 	}
-	else if (tx_diff == 0 && tx_paket == 1){
+	else if (tx_diff < mac_diff && tx_paket == 1){
 		tx_start	= 0;
 		tx_paket	= 0;
+		tx_airtime	= tx_airtime + tx_diff + (read_duration -2) * MHz;
 		tx_end		= sprintf("%.0f",tx_airtime / MHz);
 		tx_airtime	= 0;
 	}
@@ -97,7 +98,7 @@ else if (NR > 1) {
 		rx_paket	= 1;
 		rx_airtime	= rx_diff + (read_duration - 2) * MHz;
 	}
-	else if (rx_diff > 0 && rx_paket == 1){
+	else if (rx_diff == mac_diff && rx_paket == 1){
 		rx_start	= 0;
 		#check if MIB reset
 		if (pot_reset == 1)
@@ -105,9 +106,10 @@ else if (NR > 1) {
 		else
 			rx_airtime	= rx_airtime + rx_diff + (read_duration -2) * MHz;
 	}
-	else if (rx_diff == 0 && rx_paket == 1){
+	else if (rx_diff < mac_diff && rx_paket == 1){
 		rx_start	= 0;
 		rx_paket	= 0;
+		rx_airtime	= rx_airtime + rx_diff + (read_duration -2) * MHz;		
 		rx_end		= sprintf("%.0f",rx_airtime / MHz);
 		rx_airtime	= 0;
 	}
@@ -124,7 +126,7 @@ else if (NR > 1) {
 		ed_paket	= 1;
 		ed_airtime	= ed_diff + (read_duration - 2) * MHz;
 	}
-	else if (ed_diff > 0 && ed_paket == 1){
+	else if (ed_diff == mac_diff && ed_paket == 1){
 		ed_start	= 0;
 		#check if MIB reset
 		if (pot_reset == 1)
@@ -132,9 +134,10 @@ else if (NR > 1) {
 		else
 			ed_airtime	= ed_airtime + ed_diff + (read_duration -2) * MHz;
 	}
-	else if (ed_diff == 0 && ed_paket == 1){
+	else if (ed_diff < mac_diff && ed_paket == 1){
 		ed_start	= 0;
 		ed_paket	= 0;
+		ed_airtime	= ed_airtime + ed_diff + (read_duration -2) * MHz;
 		ed_end		= sprintf("%.0f",ed_airtime / MHz);
 		ed_airtime	= 0;
 	}
@@ -169,6 +172,7 @@ else if (NR > 1) {
 	rx_old		= sprintf("%d", "0x" $5);
 	ed_old		= sprintf("%d", "0x" $6);
 	pot_reset	= 0;
+	tx_end		= 0;
 }
 
 }
