@@ -5,7 +5,7 @@
 BEGIN{
     #print header
 	MHz = 40;
-    print "ktime d_ktime d_tsf d_mac d_tx d_rx d_ed d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air ed_start ed_air";
+    print "ktime d_ktime d_tsf d_mac d_tx d_rx d_ed noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air ed_start ed_air";
 }
 {
 #
