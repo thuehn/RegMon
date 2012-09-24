@@ -184,6 +184,8 @@ else if (NR > 1) {
 	ed_old		= sprintf("%d", "0x" $6);
 	pot_reset	= 0;
 	tx_end		= 0;
+	rx_end		= 0;
+	ed_end		= 0;
 }
 
 }
