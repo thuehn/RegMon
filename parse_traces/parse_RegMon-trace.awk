@@ -10,8 +10,10 @@ BEGIN{
 {
 #
 if (NR == 1) {
-	time 		= $1;
-	tsf_1_old	= sprintf("%d", "0x" substr($2,7,10));
+	sub(/0*/,"",$1); 	#delete leading zeros
+	time = $1
+	sub(/0*/,"",$2); 	#delete leading zeros
+	tsf_1_old	= $2;
     mac_old		= sprintf("%d", "0x" $3);
 	tx_old		= sprintf("%d", "0x" $4);
 	rx_old		= sprintf("%d", "0x" $5);
@@ -32,14 +34,22 @@ if (NR == 1) {
 	prev_error  = 0;
 }
 else if (NR > 1) {
+	#check if valid input at timestamp
+	if ($1 ~ /[^[:digit:]]/)
+		next
+	
+	#delete leading zeros
+	sub(/0*/,"",$1);
+	
     #time_diff
 	if(prev_error == 0){
 		if(strtonum($1) - strtonum(time) < 0){
 			k_time_diff	= "NA";
 			prev_error	= 1;
 		}
-		else 
+		else{ 
 			k_time_diff  =  strtonum($1) - strtonum(time);
+		}
 	}
 	else {
 		k_time_diff	= "NA";
@@ -47,10 +57,16 @@ else if (NR > 1) {
 	}
 
 	#tsf diff
-	if (sprintf("%d", "0x" $2) + 0 > tsf_1_old + 0)
-		tsf_1_diff	= sprintf("%d", "0x" $2) - tsf_1_old;
+	if (sprintf("%d", "0x" $2)  > sprintf("%d", "0x" tsf_1_old)){
+		tsf_1_diff	= sprintf("%d", "0x" $2) - sprintf("%d", "0x" tsf_1_old);
+		
+		#check plausibility of delta_tsf against 2x k_time
+		if (k_time_diff != "NA" && tsf_1_diff > k_time_diff / 1000 * 2)
+			tsf_1_diff	= "NA";
+		}
 	else
 		tsf_1_diff	= "NA";
+	
 	
 	# read duration of MIB register readings in usec
 	read_duration	= sprintf("%d", "0x" $7) - sprintf("%d", "0x" substr($2,9,8));
@@ -194,7 +210,7 @@ else if (NR > 1) {
 	#refresh lines
 	time_old	=time;
 	time 		= $1;
-	tsf_1_old	= sprintf("%d", "0x" $2);
+	tsf_1_old	= $2;
     mac_old		= sprintf("%d", "0x" $3);
 	tx_old		= sprintf("%d", "0x" $4);
 	rx_old		= sprintf("%d", "0x" $5);
