@@ -5,13 +5,12 @@
 BEGIN{
     #print header
 	MHz = 40;
-    print "ktime d_ktime d_tsf d_mac d_tx d_rx d_ed noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air ed_start ed_air";
+    #print "ktime d_ktime d_tsf d_mac d_tx d_rx d_ed noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air ed_start ed_air";
 }
 {
 #
 if (NR == 1) {
-	time = $1;
-    time_old	= sprintf("%d", substr($1,10,10));
+	time 		= $1;
 	tsf_1_old	= sprintf("%d", "0x" substr($2,7,10));
     mac_old		= sprintf("%d", "0x" $3);
 	tx_old		= sprintf("%d", "0x" $4);
@@ -30,16 +29,28 @@ if (NR == 1) {
 	ed_start	= 0;
 	ed_paket	= 0;
 	ed_end		= 0;
+	prev_error  = 0;
 }
 else if (NR > 1) {
     #time_diff
-    k_time_diff  =  sprintf("%.0f", (sprintf("%d", substr($1,10,10)) - time_old) / 1000 );
+	if(prev_error == 0){
+		if(strtonum($1) - strtonum(time) < 0){
+			k_time_diff	= "NA";
+			prev_error	= 1;
+		}
+		else 
+			k_time_diff  =  strtonum($1) - strtonum(time);
+	}
+	else {
+		k_time_diff	= "NA";
+		prev_error	= 0;
+	}
 
 	#tsf diff
 	if (sprintf("%d", "0x" $2) + 0 > tsf_1_old + 0)
 		tsf_1_diff	= sprintf("%d", "0x" $2) - tsf_1_old;
 	else
-		tsf_1_diff	= 12345;
+		tsf_1_diff	= "NA";
 	
 	# read duration of MIB register readings in usec
 	read_duration	= sprintf("%d", "0x" $7) - sprintf("%d", "0x" substr($2,9,8));
@@ -70,10 +81,16 @@ else if (NR > 1) {
 	    ed_diff		= sprintf("%d", "0x" $6);
     }
 	
-	#expected mac count
-    k_exp_mac	= k_time_diff * MHz ;
-	k_exp_mac	= sprintf("%.0f",($1 - time) * MHz / 1000);
-    tsf_exp_mac = tsf_1_diff * MHz;
+	#expected mac counts
+	if (k_time_diff != "NA")
+		k_exp_mac	= sprintf("%.0f", k_time_diff * MHz / 1000);
+	else
+		k_exp_mac 	= "NA";
+
+	if (tsf_1_diff  != "NA")
+	    	tsf_exp_mac = tsf_1_diff * MHz;
+	else
+		tsf_exp_mac = "NA";
 	
 	#potential tx packet borders
 	if(tx_diff > 0 && tx_paket == 0){
@@ -172,11 +189,11 @@ else if (NR > 1) {
 	nav = sprintf("%d", "0x" $10);
 
 	#final print
-    print $1 , ($1 - time), tsf_1_diff, mac_diff, tx_diff, rx_diff, ed_diff, noise, rssi, nav, read_duration, k_exp_mac, tsf_exp_mac, pot_reset, tx_start, tx_end, rx_start, rx_end, ed_start, ed_end
+	print $1 , k_time_diff, tsf_1_diff, mac_diff, tx_diff, rx_diff, ed_diff, noise, rssi, nav, read_duration, k_exp_mac, tsf_exp_mac, pot_reset, tx_start, tx_end, rx_start, rx_end, ed_start, ed_end
 
 	#refresh lines
-	time = $1;
-    time_old	= sprintf("%d", substr($1,10,10));
+	time_old	=time;
+	time 		= $1;
 	tsf_1_old	= sprintf("%d", "0x" $2);
     mac_old		= sprintf("%d", "0x" $3);
 	tx_old		= sprintf("%d", "0x" $4);
