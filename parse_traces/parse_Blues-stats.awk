@@ -71,7 +71,7 @@ else if (start_seq == 1 && substr($0,0,4) != "time" && substr($0,0,4) != "neig")
 		if (index($2,"x") !=0)
 			max_utility = 1;	
 		d_Pwr = $24 + 2;			
-		rate[2]=sprintf("%s %d %d %d %d %d %d %d %d %d %d", "2nd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+		rate[2]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "2nd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
 		max_utility = 0;		
 	}
 	#3rd rate
@@ -79,7 +79,7 @@ else if (start_seq == 1 && substr($0,0,4) != "time" && substr($0,0,4) != "neig")
 		if (index($2,"x") !=0)
 			max_utility = 1;
 		d_Pwr = $24 + 2;			
-		rate[3]=sprintf("%s %d %d %d %d %d %d %d %d %d %d", "3rd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+		rate[3]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "3rd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
 		max_utility = 0;
 	}
 	#4th rate
@@ -87,7 +87,7 @@ else if (start_seq == 1 && substr($0,0,4) != "time" && substr($0,0,4) != "neig")
 		if (index($2,"x") !=0)
 			max_utility = 1;
 		d_Pwr = $24 + 2;			
-		rate[4]=sprintf("%s %d %d %d %d %d %d %d %d %d %d", "4th-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+		rate[4]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "4th-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
 		max_utility = 0;
 	}
 	#highest probability
@@ -95,7 +95,7 @@ else if (start_seq == 1 && substr($0,0,4) != "time" && substr($0,0,4) != "neig")
 		if (index($2,"x") !=0)
 			max_utility = 1;
 		d_Pwr = $24 + 2;		
-		rate[5]=sprintf("%s %d %d %d %d %d %d %d %d %d %d", "high-pr", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+		rate[5]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "high-pr", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
 		max_utility = 0;
 	}
 
