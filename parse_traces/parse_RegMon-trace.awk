@@ -61,7 +61,7 @@ else if (NR > 1) {
 		tsf_1_diff	= sprintf("%d", "0x" $2) - sprintf("%d", "0x" tsf_1_old);
 		
 		#check plausibility of delta_tsf against 2x k_time
-		if (k_time_diff != "NA" && tsf_1_diff > k_time_diff / 1000 * 2)
+		if (k_time_diff != "NA" && tsf_1_diff < k_time_diff / 1000 * 2)
 			tsf_1_diff	= "NA";
 		}
 	else
@@ -89,7 +89,7 @@ else if (NR > 1) {
 		#receiving
 		if (sprintf("%d", "0x" $5) - rx_old <= d_mac){
 			d_rx	= sprintf("%d", "0x" $5) - rx_old;
-			rel_rx	= sprintf("%.1f",d_tr / d_mac *100);
+			rel_rx	= sprintf("%.1f",d_rx / d_mac *100);
 		}
 		else {
 			d_rx 	= 0;
