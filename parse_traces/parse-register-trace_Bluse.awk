@@ -10,16 +10,14 @@ BEGIN{
 {
 #
 if (NR == 1) {
-	sub(/0*/,"",$1); 	#delete leading zeros
 	time = $1
-	sub(/0*/,"",$2); 	#delete leading zeros
-	tsf_1_old	= $2;
-    mac_old		= sprintf("%d", "0x" $3);
-	tx_old		= sprintf("%d", "0x" $4);
-	rx_old		= sprintf("%d", "0x" $5);
-	ed_old		= sprintf("%d", "0x" $6);
+	tsf_1_old	= $10;
+    mac_old		= sprintf("%d", $2);
+	tx_old		= sprintf("%d", $3);
+	rx_old		= sprintf("%d", $4);
+	ed_old		= sprintf("%d", $5);
 	#noise
-	noise_raw	= sprintf("%d", "0x" $8);
+	noise_raw	= sprintf("%d",  $6);
 	noise		= -1 - xor(rshift(noise_raw, 19), 0x1ff);
     pot_reset	= 0;
 	tx_start	= 0;
@@ -38,9 +36,6 @@ else if (NR > 1) {
 	if ($1 ~ /[^[:digit:]]/)
 		next
 	
-	#delete leading zeros
-	sub(/0*/,"",$1);
-	
     #time_diff
 	if(prev_error == 0){
 		if(strtonum($1) - strtonum(time) < 0){
@@ -57,8 +52,8 @@ else if (NR > 1) {
 	}
 
 	#tsf diff
-	if (sprintf("%d", "0x" $2)  > sprintf("%d", "0x" tsf_1_old)){
-		tsf_1_diff	= sprintf("%d", "0x" $2) - sprintf("%d", "0x" tsf_1_old);
+	if (sprintf("%d",  $2)  > sprintf("%d", tsf_1_old)){
+		tsf_1_diff	= sprintf("%d", $2) - sprintf("%d", tsf_1_old);
 		
 		#check plausibility of delta_tsf against 2x k_time
 		if (k_time_diff != "NA" && tsf_1_diff > k_time_diff / 1000 * 2)
@@ -67,18 +62,14 @@ else if (NR > 1) {
 	else
 		tsf_1_diff	= "NA";
 	
-	
-	# read duration of MIB register readings in usec
-	read_duration	= sprintf("%d", "0x" $7) - sprintf("%d", "0x" substr($2,9,8));
-
     #d_mac states
-    if (sprintf("%d", "0x" $3) + 0 > mac_old + 0) {
+    if (sprintf("%d",  $2) + 0 > mac_old + 0) {
 		
-		d_mac		= sprintf("%d", "0x" $3) - mac_old;
+		d_mac		= sprintf("%d",  $2) - mac_old;
 		
 		#sending
-		if (sprintf("%d", "0x" $4) - tx_old  <= d_mac +0){
-	    	d_tx	= sprintf("%d", "0x" $4) - tx_old;
+		if (sprintf("%d",  $3) - tx_old  <= d_mac +0){
+	    	d_tx	= sprintf("%d",  $3) - tx_old;
 			rel_tx	= sprintf("%.1f",d_tx / d_mac *100);
 		}
 		else {
@@ -87,8 +78,8 @@ else if (NR > 1) {
 		}
 		
 		#receiving
-		if (sprintf("%d", "0x" $5) - rx_old <= d_mac){
-			d_rx	= sprintf("%d", "0x" $5) - rx_old;
+		if (sprintf("%d",  $4) - rx_old <= d_mac){
+			d_rx	= sprintf("%d",  $4) - rx_old;
 			rel_rx	= sprintf("%.1f",d_tr / d_mac *100);
 		}
 		else {
@@ -97,8 +88,8 @@ else if (NR > 1) {
 		}
 			
 		#full busy
-		if (sprintf("%d", "0x" $6) - ed_old <= d_mac){
-			d_ed	= sprintf("%d", "0x" $6) - ed_old;
+		if (sprintf("%d",  $5) - ed_old <= d_mac){
+			d_ed	= sprintf("%d",  $5) - ed_old;
 			rel_ed	= sprintf("%.1f",d_ed / d_mac *100);
 		}
 		else {
@@ -128,10 +119,10 @@ else if (NR > 1) {
     }
     else {
 	    pot_reset	= 1;
-	    d_mac		= sprintf("%d", "0x" $3);
-	    d_tx		= sprintf("%d", "0x" $4);
-	    d_rx		= sprintf("%d", "0x" $5);
-	    d_ed		= sprintf("%d", "0x" $6);
+	    d_mac		= sprintf("%d",  $2);
+	    d_tx		= sprintf("%d",  $3);
+	    d_rx		= sprintf("%d",  $4);
+	    d_ed		= sprintf("%d",  $5);
 		d_idle		= d_mac - d_ed;
 		d_others	= d_ed - (d_tx + d_rx);
 		rel_tx		= sprintf("%.1f",d_tx / d_mac *100);
@@ -238,16 +229,16 @@ else if (NR > 1) {
 	}
 
     #noise calculation
-    if (noise_raw != $8) {
+    if (noise_raw != $6) {
 		noise		= -1 - xor(rshift(noise_raw, 19), 0x1ff);
-		noise_raw	= $8;
+		noise_raw	= $6;
     }
 	
 	#rssi calculation
-	rssi = sprintf("%d", "0x" $9);
+	rssi = sprintf("%d",  $7);
 
 	#nav
-	nav = sprintf("%d", "0x" $10);
+	nav = sprintf("%d",  $8);
 
 	#final print
 	print $1 , k_time_diff, tsf_1_diff, d_mac, d_tx, rel_tx, d_rx, rel_rx, d_ed, rel_ed, d_idle, rel_idle, d_others, rel_others, noise, rssi, nav, read_duration, k_exp_mac, tsf_exp_mac, pot_reset, tx_start, tx_end, rx_start, rx_end, others_start, others_end
@@ -255,11 +246,11 @@ else if (NR > 1) {
 	#refresh lines
 	time_old	=time;
 	time 		= $1;
-	tsf_1_old	= $2;
-    mac_old		= sprintf("%d", "0x" $3);
-	tx_old		= sprintf("%d", "0x" $4);
-	rx_old		= sprintf("%d", "0x" $5);
-	ed_old		= sprintf("%d", "0x" $6);
+	tsf_1_old	= $10;
+    mac_old		= sprintf("%d",  $2);
+	tx_old		= sprintf("%d",  $3);
+	rx_old		= sprintf("%d",  $4);
+	ed_old		= sprintf("%d",  $5);
 	pot_reset	= 0;
 	tx_end		= 0;
 	rx_end		= 0;
