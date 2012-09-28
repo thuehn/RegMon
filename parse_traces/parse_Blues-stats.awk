@@ -107,5 +107,6 @@ else if (start_seq == 1 && substr($0,0,4) == "neig"){
 	for (i = 1; i < 6; i++) {
 		print timestamp, mac, rate[i]
 	}
+	mac		= substr($0,11,28);
 }
 }
