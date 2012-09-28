@@ -108,12 +108,12 @@ else if (NR > 1) {
 
 		#calculate channel idle states
 		if (d_mac - d_ed > 0) {
-			d_idle		= d_mac - d_ed;
+			d_idle		= d_mac - d_ed;		
 			rel_idle	= sprintf("%.1f",d_idle / d_mac *100);
 		}
 		else {
-			d_idle	= 0;
-			d_mac	= 0;
+			d_idle		= 0;
+			rel_idle	= 0;
 		}
 	
 		#calculate busy that is triggered from other sources but rx & tx
