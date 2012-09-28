@@ -3,15 +3,16 @@
 # Thomas Huehn 2012
 
 BEGIN{
-    #print header
-	MHz = 40;
-    #print "ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air burst_start burst_air";
+	#mac clock rate ... should be a parameter to read
+	MHz = 44;
+	#print header
+    print "ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others noise rssi nav e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air burst_start burst_air";
 }
 {
 #
 if (NR == 1) {
 	time = $1
-	tsf_1_old	= $10;
+	tsf_1_old	= sprintf("%d", $10);
     mac_old		= sprintf("%d", $2);
 	tx_old		= sprintf("%d", $3);
 	rx_old		= sprintf("%d", $4);
@@ -33,7 +34,7 @@ if (NR == 1) {
 }
 else if (NR > 1) {
 	#check if valid input at timestamp
-	if ($1 ~ /[^[:digit:]]/)
+	if ($1 ~ /[^[:digit:].]/)
 		next
 	
     #time_diff
@@ -43,7 +44,7 @@ else if (NR > 1) {
 			prev_error	= 1;
 		}
 		else{ 
-			k_time_diff  =  strtonum($1) - strtonum(time);
+			k_time_diff  =  sprintf("%.0f",(strtonum($1) - strtonum(time))*1000000);
 		}
 	}
 	else {
@@ -52,16 +53,16 @@ else if (NR > 1) {
 	}
 
 	#tsf diff
-	if (sprintf("%d",  $2)  > sprintf("%d", tsf_1_old)){
-		tsf_1_diff	= sprintf("%d", $2) - sprintf("%d", tsf_1_old);
+	if (sprintf("%d",  $10)  > tsf_1_old) {
+		tsf_1_diff	= sprintf("%d", $10) - sprintf("%d", tsf_1_old);
 		
 		#check plausibility of delta_tsf against 2x k_time
-		if (k_time_diff != "NA" && tsf_1_diff > k_time_diff / 1000 * 2)
-			tsf_1_diff	= "NA";
+		#if (k_time_diff != "NA" && tsf_1_diff < k_time_diff  * 2)
+		#	tsf_1_diff	= "NA";
 		}
 	else
 		tsf_1_diff	= "NA";
-	
+
     #d_mac states
     if (sprintf("%d",  $2) + 0 > mac_old + 0) {
 		
@@ -80,7 +81,7 @@ else if (NR > 1) {
 		#receiving
 		if (sprintf("%d",  $4) - rx_old <= d_mac){
 			d_rx	= sprintf("%d",  $4) - rx_old;
-			rel_rx	= sprintf("%.1f",d_tr / d_mac *100);
+			rel_rx	= sprintf("%.1f",d_rx / d_mac *100);
 		}
 		else {
 			d_rx 	= 0;
@@ -132,9 +133,11 @@ else if (NR > 1) {
 		rel_others	= sprintf("%.1f",d_others / d_mac *100);
     }
 	
+
+
 	#expected mac counts
 	if (k_time_diff != "NA")
-		k_exp_mac	= sprintf("%.0f", k_time_diff * MHz / 1000);
+		k_exp_mac	= sprintf("%.0f", k_time_diff * MHz);
 	else
 		k_exp_mac 	= "NA";
 
@@ -172,6 +175,8 @@ else if (NR > 1) {
 		tx_airtime	= 0;
 	}
 	
+
+
 	#potential rx packet borders
 	if(d_rx > 0 && rx_paket == 0){
 		rx_start	= 1;
@@ -241,7 +246,7 @@ else if (NR > 1) {
 	nav = sprintf("%d",  $8);
 
 	#final print
-	print $1 , k_time_diff, tsf_1_diff, d_mac, d_tx, rel_tx, d_rx, rel_rx, d_ed, rel_ed, d_idle, rel_idle, d_others, rel_others, noise, rssi, nav, read_duration, k_exp_mac, tsf_exp_mac, pot_reset, tx_start, tx_end, rx_start, rx_end, others_start, others_end
+	print $1, k_time_diff, tsf_1_diff, d_mac, d_tx, rel_tx, d_rx, rel_rx, d_ed, rel_ed, d_idle, rel_idle, d_others, rel_others, noise, rssi, nav, k_exp_mac, tsf_exp_mac, pot_reset, tx_start, tx_end, rx_start, rx_end, others_start, others_end
 
 	#refresh lines
 	time_old	=time;
@@ -256,7 +261,6 @@ else if (NR > 1) {
 	rx_end		= 0;
 	ed_end		= 0;
 }
-
 }
 END{
 
