@@ -138,11 +138,20 @@ else if (NR > 1) {
 	    d_ed		= sprintf("%d", "0x" $6);
 		d_idle		= d_mac - d_ed;
 		d_others	= d_ed - (d_tx + d_rx);
-		rel_tx		= sprintf("%.1f",d_tx / d_mac *100);
-		rel_rx		= sprintf("%.1f",d_rx / d_mac *100);
-		rel_ed		= sprintf("%.1f",d_ed / d_mac *100);
-		rel_idle	= sprintf("%.1f",d_idle / d_mac *100);
-		rel_others	= sprintf("%.1f",d_others / d_mac *100);
+		if (d_mac > 0){
+			rel_tx		= sprintf("%.1f",d_tx / d_mac *100);
+			rel_rx		= sprintf("%.1f",d_rx / d_mac *100);
+			rel_ed		= sprintf("%.1f",d_ed / d_mac *100);
+			rel_idle	= sprintf("%.1f",d_idle / d_mac *100);
+			rel_others	= sprintf("%.1f",d_others / d_mac *100);
+		}
+		else {
+			rel_tx		= "NA";
+			rel_rx		= "NA";
+			rel_ed		= "NA";
+			rel_idle	= "NA";
+			rel_others	= "NA";
+		}
     }
 	
 	#expected mac counts
