@@ -46,7 +46,7 @@ else if (NR > 1) {
 	
     #kernel time_diff in usec
 	if(prev_error == 0){
-		if(strtonum($1) - strtonum(time) < 0){
+		if(strtonum($1) - strtonum(time) <= 0){
 			k_time_diff	= "NA";
 			prev_error	= 1;
 		}
