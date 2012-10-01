@@ -5,7 +5,7 @@
 BEGIN{
     #print header
 	MHz = 40;
-    #print "ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air burst_start burst_air";
+    print "ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air burst_start burst_air";
 }
 {
 #
@@ -87,7 +87,7 @@ else if (NR > 1) {
 		}
 		else {
 			d_tx 	= 0;
-			rel_tx	= 0;
+			rel_tx	= sprintf("%.1f",0);
 		}
 		
 		#receiving
@@ -97,7 +97,7 @@ else if (NR > 1) {
 		}
 		else {
 			d_rx 	= 0;
-			rel_rx	= 0;
+			rel_rx	= sprintf("%.1f",0);
 		}
 			
 		#full busy
@@ -107,7 +107,7 @@ else if (NR > 1) {
 		}
 		else {
 			d_ed 	= 0;
-			rel_ed	= 0;
+			rel_ed	= sprintf("%.1f",0);
 		}
 
 		#calculate channel idle states
@@ -117,7 +117,7 @@ else if (NR > 1) {
 		}
 		else {
 			d_idle		= 0;
-			rel_idle	= 0;
+			rel_idle	= sprintf("%.1f",0);
 		}
 	
 		#calculate busy that is triggered from other sources but rx & tx
@@ -127,7 +127,7 @@ else if (NR > 1) {
 		}
 		else {
 			d_others	= 0;
-			rel_others	= 0;
+			rel_others	= sprintf("%.1f",0);
 		}			
     }
     else {
@@ -156,7 +156,7 @@ else if (NR > 1) {
 	
 	#expected mac counts
 	if (k_time_diff != "NA")
-		k_exp_mac	= sprintf("%.0f", k_time_diff * MHz / 1000);
+		k_exp_mac	= sprintf("%.0f", k_time_diff * MHz);
 	else
 		k_exp_mac 	= "NA";
 
