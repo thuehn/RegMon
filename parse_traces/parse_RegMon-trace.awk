@@ -251,10 +251,8 @@ else if (NR > 1) {
 	}
 
     #noise calculation
-    if (noise_raw != $8) {
-		noise		= -1 - xor(rshift(noise_raw, 19), 0x1ff);
-		noise_raw	= $8;
-    }
+	noise_raw	= sprintf("%d", "0x" $8);
+	noise		= -1 - xor(rshift(noise_raw, 19), 0x1ff);
 	
 	#rssi calculation
 	rssi = sprintf("%d", "0x" $9);
