@@ -11,9 +11,10 @@ BEGIN{
 #
 if (NR == 1) {
 	sub(/0*/,"",$1); 	#delete leading zeros
-	time = $1
+	time 		= $1
+	full_tsf_old	= $2;	#64bit tsf in $2
 	sub(/0*/,"",$2); 	#delete leading zeros
-	tsf_1_old	= $2;
+	tsf_1_old	= strtonum(sprintf("%d", "0x" $2));
     mac_old		= sprintf("%d", "0x" $3);
 	tx_old		= sprintf("%d", "0x" $4);
 	rx_old		= sprintf("%d", "0x" $5);
@@ -38,17 +39,19 @@ else if (NR > 1) {
 	if ($1 ~ /[^[:digit:]]/)
 		next
 	
-	#delete leading zeros
+	#delete leading zeros in kernel timestamp at $1 and tsf at $2 
 	sub(/0*/,"",$1);
+	full_tsf = $2;		#64bit tsf in $2
+	sub(/0*/,"",$2);
 	
-    #time_diff
+    #kernel time_diff in usec
 	if(prev_error == 0){
 		if(strtonum($1) - strtonum(time) < 0){
 			k_time_diff	= "NA";
 			prev_error	= 1;
 		}
 		else{ 
-			k_time_diff  =  strtonum($1) - strtonum(time);
+			k_time_diff  =  sprintf("%.0f",(strtonum($1) - strtonum(time))/1000);
 		}
 	}
 	else {
@@ -57,19 +60,20 @@ else if (NR > 1) {
 	}
 
 	#tsf diff
-	if (sprintf("%d", "0x" $2)  > sprintf("%d", "0x" tsf_1_old)){
-		tsf_1_diff	= sprintf("%d", "0x" $2) - sprintf("%d", "0x" tsf_1_old);
-		
-		#check plausibility of delta_tsf against 2x k_time
-		if (k_time_diff != "NA" && tsf_1_diff < k_time_diff / 1000 * 2)
+	tsf_1 = strtonum(sprintf("%d", "0x" $2));
+	if (tsf_1  > tsf_1_old){
+		tsf_1_diff	= tsf_1 - tsf_1_old;
+		#check plausibility of delta_tsf exeeds 2x k_time
+		if (k_time_diff != "NA" && tsf_1_diff > k_time_diff * 2){
 			tsf_1_diff	= "NA";
 		}
-	else
+	}
+	else {
 		tsf_1_diff	= "NA";
+	}
 	
-	
-	# read duration of MIB register readings in usec
-	read_duration	= sprintf("%d", "0x" $7) - sprintf("%d", "0x" substr($2,9,8));
+	# read duration of our two MIB register readings in usec
+	read_duration	= sprintf("%d", "0x" $7) - sprintf("%d", "0x" substr(full_tsf,9,8));
 
     #d_mac states
     if (sprintf("%d", "0x" $3) + 0 > mac_old + 0) {
@@ -255,7 +259,7 @@ else if (NR > 1) {
 	#refresh lines
 	time_old	=time;
 	time 		= $1;
-	tsf_1_old	= $2;
+	tsf_1_old	= strtonum(sprintf("%d", "0x" $2));
     mac_old		= sprintf("%d", "0x" $3);
 	tx_old		= sprintf("%d", "0x" $4);
 	rx_old		= sprintf("%d", "0x" $5);
