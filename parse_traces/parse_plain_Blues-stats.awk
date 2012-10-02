@@ -43,69 +43,69 @@ BEGIN{
 #remove spaces from datarate field
 sub(/^[[:blank:]]*/, "", $3)
 
-if (start_seq == 0 && $3 == lowest_bit_rate){
-	start_seq = 1;
+if (start_seq == 0 && $3 != lowest_bit_rate){
+	print "found"
+	next;
+} 
+else if (start_seq == 0 && $3 == lowest_bit_rate && $2 != "ABCDPx")
+	start_seq =1;
+
+#keep timestamp
+timestamp = $1;
+
+#skip trace durations of idle states of Minstrel-Blues - when rates are all the same
+if ((index($2,"A") !=0) && (index($2,"B") !=0) && (index($2,"C") !=0) && (index($2,"D") !=0)){
+	print "skip";
 	next;
 }
-else if (start_seq == 0){
-	next;
+
+
+#1st rate
+if (index($2,"A") !=0){
+	if (index($2,"x") !=0)
+		max_utility = 1;
+	#format: ratename, max_utility, datarate, thr, sampl_Pwr, ref_Pwr
+	d_Pwr = $24 + 2;
+	rate[1]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "1st-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+	max_utility = 0;
+}
+#2nd rate
+if (index($2,"B") !=0 ){
+	if (index($2,"x") !=0)
+		max_utility = 1;	
+	d_Pwr = $24 + 2;			
+	rate[2]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "2nd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+	max_utility = 0;		
+}
+#3rd rate
+if (index($2,"C") !=0 ){
+	if (index($2,"x") !=0)
+		max_utility = 1;
+	d_Pwr = $24 + 2;			
+	rate[3]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "3rd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+	max_utility = 0;
+}
+#4th rate
+if (index($2,"D") !=0 ){
+	if (index($2,"x") !=0)
+		max_utility = 1;
+	d_Pwr = $24 + 2;			
+	rate[4]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "4th-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+	max_utility = 0;
+}
+#highest probability
+if (index($2,"P") !=0 ){
+	if (index($2,"x") !=0)
+		max_utility = 1;
+	d_Pwr = $24 + 2;		
+	rate[5]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "high-pr", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
+	max_utility = 0;
 }
 
-#DATA
-else if (start_seq == 1 && $3 != lowest_bit_rate){
-
-	#keep timestamp
-	timestamp = $1;
-
-	#1st rate
-	if (index($2,"A") !=0){
-		if (index($2,"x") !=0)
-			max_utility = 1;
-		#format: ratename, max_utility, datarate, thr, sampl_Pwr, ref_Pwr
-		d_Pwr = $24 + 2;
-		rate[1]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "1st-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
-		max_utility = 0;
-	}
-	#2nd rate
-	if (index($2,"B") !=0 ){
-		if (index($2,"x") !=0)
-			max_utility = 1;	
-		d_Pwr = $24 + 2;			
-		rate[2]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "2nd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
-		max_utility = 0;		
-	}
-	#3rd rate
-	if (index($2,"C") !=0 ){
-		if (index($2,"x") !=0)
-			max_utility = 1;
-		d_Pwr = $24 + 2;			
-		rate[3]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "3rd-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
-		max_utility = 0;
-	}
-	#4th rate
-	if (index($2,"D") !=0 ){
-		if (index($2,"x") !=0)
-			max_utility = 1;
-		d_Pwr = $24 + 2;			
-		rate[4]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "4th-best", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
-		max_utility = 0;
-	}
-	#highest probability
-	if (index($2,"P") !=0 ){
-		if (index($2,"x") !=0)
-			max_utility = 1;
-		d_Pwr = $24 + 2;		
-		rate[5]=sprintf("%s %d %d %d %d %d %d %d %d %d %d %d", "high-pr", max_utility, $3*10, $4*10, $5*10, $21*10, $22*10, $23*10, $24, d_Pwr, $25, $26);
-		max_utility = 0;
-	}
-
+	
+#print output file
+for (i = 1; i < 6; i++) {
+	print timestamp, rate[i]
 }
 
-#MAC and we need to print
-else if (start_seq == 1 && $3 == lowest_bit_rate){
-
-	for (i = 1; i < 6; i++) {
-		print timestamp, rate[i]
-	}
-}
 }
