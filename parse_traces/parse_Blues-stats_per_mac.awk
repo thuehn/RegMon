@@ -8,7 +8,10 @@ BEGIN{
 	start_seq = 0;
 	i = 1;
 	max_utility = 0;
-	print "timestamp mac minstrel max_utility datarate thr Pr r_Pr d_Pr s_Pr s_Pwr d_Pwr r_Pwr a_Pwr"
+
+	#check if header should be printed
+	if (header == 1)
+		print "timestamp mac minstrel max_utility datarate thr Pr r_Pr d_Pr s_Pr s_Pwr d_Pwr r_Pwr a_Pwr"
 
 	#power mapping from Blues
 	#dBm2uW[0]=1000;

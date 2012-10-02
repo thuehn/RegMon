@@ -7,11 +7,14 @@ BEGIN{
 	FS = ","
 	#typical values: in 5GHz it is 6MBit in 2,4GHz 1Mbit 
 	lowest_bit_rate=6;
-	
+
 	start_seq = 0;
 	i = 1;
 	max_utility = 0;
-	print "timestamp minstrel max_utility datarate thr Pr r_Pr d_Pr s_Pr s_Pwr d_Pwr r_Pwr a_Pwr"
+
+	#check if header should be printed
+	if (header == 1)
+		print "timestamp minstrel max_utility datarate thr Pr r_Pr d_Pr s_Pr s_Pwr d_Pwr r_Pwr a_Pwr"
 
 	#power mapping from Blues
 	#dBm2uW[0]=1000;

@@ -5,7 +5,10 @@
 BEGIN{
     #print header
 	MHz = 40;
-    print "ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air burst_start burst_air";
+
+	#check if header should be printed
+	if (header == 1)
+	    print "ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others noise rssi nav d_read e_mac_k e_mac_tsf reset tx_start tx_air rx_start rx_air burst_start burst_air";
 }
 {
 #
