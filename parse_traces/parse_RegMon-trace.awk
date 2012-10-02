@@ -3,8 +3,12 @@
 # Thomas Huehn 2012
 
 BEGIN{
-    #print header
-	MHz = 40;
+
+	#mac clock rate, if not specifyed at script start, defaul=80211a=40MHz            
+	if (clock == "")
+		MHz = 40;
+	else
+		MHz = clock;
 
 	#check if header should be printed
 	if (header == 1)
