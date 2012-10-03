@@ -123,22 +123,37 @@ else if (NR > 1) {
 			rel_others	= 0;
 		}			
     }
-    else {
-	    pot_reset	= 1;
-	    d_mac		= sprintf("%d",  $2);
-	    d_tx		= sprintf("%d",  $3);
-	    d_rx		= sprintf("%d",  $4);
-	    d_ed		= sprintf("%d",  $5);
-		d_idle		= d_mac - d_ed;
-		d_others	= d_ed - (d_tx + d_rx);
+else {
+    pot_reset	= 1;
+    d_mac		= sprintf("%d", "0x" $3);
+    d_tx		= sprintf("%d", "0x" $4);
+    d_rx		= sprintf("%d", "0x" $5);
+    d_ed		= sprintf("%d", "0x" $6);
+	#validate input data in case of a reset
+	if (d_mac - d_ed > 0)
+		d_idle = d_mac - d_ed
+	else
+		d_idle = 0;
+	if (d_ed - (d_tx + d_rx) > 0)
+		d_others = d_ed - (d_tx + d_rx);
+	else
+		d_others = 0;
+
+	if (d_mac > 0){
 		rel_tx		= sprintf("%.1f",d_tx / d_mac *100);
 		rel_rx		= sprintf("%.1f",d_rx / d_mac *100);
 		rel_ed		= sprintf("%.1f",d_ed / d_mac *100);
 		rel_idle	= sprintf("%.1f",d_idle / d_mac *100);
 		rel_others	= sprintf("%.1f",d_others / d_mac *100);
-    }
-	
-
+	}
+	else {
+		rel_tx		= "NA";
+		rel_rx		= "NA";
+		rel_ed		= "NA";
+		rel_idle	= "NA";
+		rel_others	= "NA";
+	}
+}
 
 	#expected mac counts
 	if (k_time_diff != "NA")
