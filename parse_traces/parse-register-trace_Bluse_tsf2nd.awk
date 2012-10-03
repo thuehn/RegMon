@@ -81,7 +81,7 @@ else if (NR > 1) {
 		d_mac		= sprintf("%d", "0x" $3) - mac_old;
 		
 		#sending
-		if (sprintf("%d", "0x" $4) - tx_old  <= d_mac +0){
+		if (sprintf("%d", "0x" $4) - tx_old  <= d_mac +0 && sprintf("%d", "0x" $4) - tx_old >= 0){
 	    	d_tx	= sprintf("%d", "0x" $4) - tx_old;
 			rel_tx	= sprintf("%.1f",d_tx / d_mac *100);
 		}
@@ -91,7 +91,7 @@ else if (NR > 1) {
 		}
 		
 		#receiving
-		if (sprintf("%d", "0x" $5) - rx_old <= d_mac){
+		if (sprintf("%d", "0x" $5) - rx_old <= d_mac +0 && sprintf("%d", "0x" $5) - rx_old >= 0){
 			d_rx	= sprintf("%d", "0x" $5) - rx_old;
 			rel_rx	= sprintf("%.1f",d_rx / d_mac *100);
 		}
@@ -101,7 +101,7 @@ else if (NR > 1) {
 		}
 			
 		#full busy
-		if (sprintf("%d", "0x" $6) - ed_old <= d_mac){
+		if (sprintf("%d", "0x" $6) - ed_old <= d_mac +0 && sprintf("%d", "0x" $6) - ed_old >= 0){
 			d_ed	= sprintf("%d", "0x" $6) - ed_old;
 			rel_ed	= sprintf("%.1f",d_ed / d_mac *100);
 		}
