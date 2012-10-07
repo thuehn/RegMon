@@ -55,6 +55,7 @@ arguments.add_option("-i","--interval",
                      help="Consolidation interval in seconds")
 arguments.add_option("-w","--filter",
                      dest="filter",
+					 default="",
                      help="Wireshark filter")
 arguments.add_option("-o","--output-format",
                      dest="output",
@@ -88,6 +89,7 @@ if options.textfile:
 else:
    textfile = pcapfile+'.tmp3'
    filter_cmd='tshark -r %s %s -T fields -e frame.time_relative -e radiotap.datarate -e frame.len -e radiotap.channel.type.cck -e radiotap.channel.type.dynamic -e radiotap.channel.type.ofdm -e radiotap.flags.preamble -e radiotap.channel.type.2ghz -e radiotap.channel.type.5ghz > %s' % (pcapfile, filter_exp, textfile)
+#   print "filter: '%s'" % filter_cmd
    s, o = commands.getstatusoutput(filter_cmd)
 if options.interval:
    interval = float(options.interval)
@@ -109,7 +111,7 @@ ofdm_datarates = ('6', '9', '12', '18', '24', '36', '48', '54')
 lno = 0
 for line in fd:
 	lno += 1
-	time, rate, size, cck, dynamic, ofdm, preamble, twoghz, fiveghz = line.split('\t')
+	time, rate, size, cck, dynamic, ofdm, preamble, twoghz, fiveghz = line.replace("\n", "").split('\t')
 	size = size.strip('\n')
 
 	### ARITIME calculation ###
