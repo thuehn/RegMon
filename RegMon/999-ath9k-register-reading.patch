@@ -1,0 +1,341 @@
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -28,6 +28,12 @@
+ #include "mci.h"
+ #include "dfs.h"
+ 
++//Begin Bluse
++#include <linux/timer.h>
++#include <linux/hrtimer.h>
++#define REG_LOG_ROWS 30000
++//End Bluse
++
+ /*
+  * Header for the ath9k.ko driver core *only* -- hw code nor any other driver
+  * should rely on this file or its contents.
+@@ -695,6 +701,13 @@ struct ath_led {
+ 	struct led_classdev cdev;
+ };
+ 
++//begin Bluse
++struct hrtimer_mod {
++	struct hrtimer timer;	/* the hrtime */
++        ktime_t interval;	/* interval to use in hrtimer_forward */
++};
++//end Bluse
++
+ struct ath_softc {
+ 	struct ieee80211_hw *hw;
+ 	struct device *dev;
+@@ -769,6 +782,22 @@ struct ath_softc {
+ 	struct ath_spec_scan spec_config;
+ 	int scanning;
+ 
++	//begin Bluse
++	int shutdown;
++	struct dentry *debugfs_dir;
++	spinlock_t reg_lock;
++	u32 reg_interval;
++	u32 reg_hz;
++	u32 reg[17];
++	struct timer_list reg_timer;
++	s64 *reg_hosttime;
++	u32 *reg_log[17];
++	int reg_last;
++	int reg_current;
++	int reg_count;
++	struct hrtimer_mod hrtm;
++	//end Bluse
++
+ #ifdef CONFIG_PM_SLEEP
+ 	atomic_t wow_got_bmiss_intr;
+ 	atomic_t wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -31,6 +31,159 @@ struct ath9k_eeprom_ctx {
+ 	struct ath_hw *ah;
+ };
+ 
++		 //Begin from Bluse
++		 static int reg_log_open(struct inode *inode, struct file *file)
++		 {
++	file->private_data = inode->i_private;
++	return 0;
++ }
++
++ static ssize_t reg_log_read(struct file *file, char __user *userbuf, size_t count, loff_t *ppos)
++ {
++	struct ath_softc *sc = file->private_data;
++	char buf[256];
++	size_t available, n, ret;
++	loff_t pos;
++	size_t sum = 0;
++
++	spin_lock_bh(&sc->reg_lock);
++
++	while (sc->reg_last != sc->reg_current && count > 0) {
++		spin_unlock_bh(&sc->reg_lock);
++
++		available = scnprintf(buf, sizeof(buf), "%.19lld %.8x%.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x\n",
++			sc->reg_hosttime[sc->reg_last],
++			(unsigned int) sc->reg_log[0][sc->reg_last],
++			(unsigned int) sc->reg_log[1][sc->reg_last],
++			(unsigned int) sc->reg_log[2][sc->reg_last],
++			(unsigned int) sc->reg_log[3][sc->reg_last],
++			(unsigned int) sc->reg_log[4][sc->reg_last],
++			(unsigned int) sc->reg_log[5][sc->reg_last],
++			(unsigned int) sc->reg_log[6][sc->reg_last],
++			(unsigned int) sc->reg_log[7][sc->reg_last],
++			(unsigned int) sc->reg_log[8][sc->reg_last],
++			(unsigned int) sc->reg_log[9][sc->reg_last],
++			(unsigned int) sc->reg_log[10][sc->reg_last],
++			(unsigned int) sc->reg_log[11][sc->reg_last],
++			(unsigned int) sc->reg_log[12][sc->reg_last],
++			(unsigned int) sc->reg_log[13][sc->reg_last],
++			(unsigned int) sc->reg_log[14][sc->reg_last],
++			(unsigned int) sc->reg_log[15][sc->reg_last],
++			(unsigned int) sc->reg_log[16][sc->reg_last]);
++
++		n = 0;
++		if (*ppos < available && count > 0) {
++			n = count;
++			pos = *ppos;
++
++			if (pos < 0) {
++				return -EINVAL;
++			}
++
++			if (n > available - pos) {
++				n = available - pos;
++			}
++
++			ret = copy_to_user(userbuf, buf + pos, n);
++			if (ret == n) {
++				return -EFAULT;
++			}
++
++			n -= ret;
++			*ppos = pos + n;
++		}
++
++		spin_lock_bh(&sc->reg_lock);
++
++		sum += n;
++		count -= n;
++		if (count <= 0) {
++			break;
++		}
++
++		userbuf += n;
++		*ppos = 0;
++
++		if (++sc->reg_last >= REG_LOG_ROWS - 1) {
++			sc->reg_last = 0;
++		}
++	}
++
++	spin_unlock_bh(&sc->reg_lock);
++
++	return sum;
++ }
++
++ static const struct file_operations reg_log_ops = {
++	.read = reg_log_read,
++	.open = reg_log_open,
++ };
++
++ // Register logger via htimer
++ static enum hrtimer_restart read_registers(struct hrtimer *hrtimer)
++ {
++	struct hrtimer_mod  *hrtm = container_of(hrtimer, struct hrtimer_mod, timer);
++	struct ath_softc *sc = container_of(hrtm, struct ath_softc, hrtm);
++	struct ath_hw *ah = sc->sc_ah;
++	int i;
++	static struct timespec ts;
++
++	if (sc->shutdown)
++		return HRTIMER_NORESTART;
++
++	// get current kernel time per row
++	getnstimeofday(&ts);
++	sc->reg_hosttime[sc->reg_current] = timespec_to_ns(&ts);
++
++	// get tsf time from card
++	sc->reg_log[0][sc->reg_current] = REG_READ(ah, 0x8050); //TSF_upper
++	sc->reg_log[1][sc->reg_current] = REG_READ(ah, 0x804c); //TSF_lower
++
++	// freeze all MIB registers on Atheros hardware
++	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
++
++	sc->reg_log[2][sc->reg_current] = REG_READ(ah, 0x80f8); //MAC counter
++	sc->reg_log[3][sc->reg_current] = REG_READ(ah, 0x80ec); //TX busy
++	sc->reg_log[4][sc->reg_current] = REG_READ(ah, 0x80f0); //RX busy
++	sc->reg_log[5][sc->reg_current] = REG_READ(ah, 0x80f4); //ED busy
++
++	// un-freeze MIB registers
++	REG_WRITE(ah, AR_MIBC, 0);
++
++	// read tsf time again to get duration of MIB readings
++	sc->reg_log[6][sc->reg_current] = REG_READ(ah, 0x804c); //TSF_lower
++
++
++	//read register values if specified from user space
++	for (i = 7; i < 17; i++) {
++		if (sc->reg[i] > 0)
++			sc->reg_log[i][sc->reg_current] = REG_READ(ah, sc->reg[i]);
++		else
++		sc->reg_log[i][sc->reg_current] = 0;
++	}
++
++	spin_lock(&sc->reg_lock);
++
++	if (++sc->reg_current > REG_LOG_ROWS - 1) {
++		sc->reg_current = 0;
++	}
++	if (sc->reg_last == sc->reg_current) {
++		if (++sc->reg_last > REG_LOG_ROWS - 1) {
++			sc->reg_last = 0;
++		}
++	}
++
++	spin_unlock(&sc->reg_lock);
++
++	if (sc->reg_interval > 0)
++		hrtimer_forward(hrtimer, ktime_get(), ns_to_ktime(sc->reg_interval));
++	else
++		hrtimer_forward(hrtimer, ktime_get(), ns_to_ktime(10000000));
++
++	return HRTIMER_RESTART;
++ }
++ //end from Bluse
++
+ static char *dev_info = "ath9k";
+ 
+ MODULE_AUTHOR("Atheros Communications");
+@@ -842,6 +995,7 @@ int ath9k_init_device(u16 devid, struct
+ 	struct ath_common *common;
+ 	struct ath_hw *ah;
+ 	int error = 0;
++	int i, res;
+ 	struct ath_regulatory *reg;
+ 
+ 	/* Bring up device */
+@@ -901,6 +1055,50 @@ int ath9k_init_device(u16 devid, struct
+ 	ath_init_leds(sc);
+ 	ath_start_rfkill_poll(sc);
+ 
++//begin Bluse
++	sc->reg_hosttime = kmalloc(REG_LOG_ROWS * sizeof(s64), GFP_KERNEL);
++
++	for (i = 0; i < 17; i++) {
++		sc->reg_log[i] = kmalloc(REG_LOG_ROWS * sizeof(u32), GFP_KERNEL);
++	}
++
++	sc->reg_lock = __SPIN_LOCK_UNLOCKED(RegMon);
++	sc->reg_hz = HZ;
++
++	sc->debugfs_dir = debugfs_create_dir("RegMon", sc->hw->wiphy->debugfsdir);
++	if (sc->debugfs_dir) {
++		printk(KERN_ERR "[bluse] RegMon folder created in %p \n", sc->hw->wiphy->debugfsdir);
++		debugfs_create_u32("reg_interval", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg_interval);
++		debugfs_create_u32("reg_hz", S_IRUSR, sc->debugfs_dir, &sc->reg_hz);
++		debugfs_create_file("reg_log", S_IRUSR, sc->debugfs_dir, sc, &reg_log_ops);
++
++		// debugfs entries to change registers from user space
++		debugfs_create_x32("reg7", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[7]);
++		debugfs_create_x32("reg8", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[8]);
++		debugfs_create_x32("reg9", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[9]);
++		debugfs_create_x32("reg10", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[10]);
++		debugfs_create_x32("reg11", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[11]);
++		debugfs_create_x32("reg12", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[12]);
++		debugfs_create_x32("reg13", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[13]);
++		debugfs_create_x32("reg14", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[14]);
++		debugfs_create_x32("reg15", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[15]);
++		debugfs_create_x32("reg16", S_IWUSR | S_IRUSR, sc->debugfs_dir, &sc->reg[16]);
++		printk(KERN_ERR "[bluse] RegMon files created\n");
++
++		// start hrtimers with normal interval
++		sc->reg_interval = 10000000; //100.000.000 nsec as initial value
++		hrtimer_init(&sc->hrtm.timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
++		sc->hrtm.timer.function = read_registers;
++
++		usleep_range(10000000,20000000);
++		res = hrtimer_start(&sc->hrtm.timer, sc->hrtm.interval, HRTIMER_MODE_REL);
++		if(res)
++			printk(KERN_ERR "[bluse]: RegMon hrtimer was active\n");
++		else
++			printk(KERN_ERR "[bluse]: RegMon hrtimer successful starts\n");
++	};
++//end Bluse
++
+ 	return 0;
+ 
+ unregister:
+@@ -919,6 +1117,7 @@ deinit:
+ static void ath9k_deinit_softc(struct ath_softc *sc)
+ {
+ 	int i = 0;
++	int res;
+ 
+ 	ath9k_deinit_btcoex(sc);
+ 
+@@ -936,6 +1135,19 @@ static void ath9k_deinit_softc(struct at
+ 		relay_close(sc->rfs_chan_spec_scan);
+ 		sc->rfs_chan_spec_scan = NULL;
+ 	}
++
++	//Begin Bluse
++	sc->shutdown = 1;
++	res = hrtimer_cancel(&sc->hrtm.timer);
++	printk(KERN_ERR "[bluse]: RegMon stop hrtimer\n");
++
++	debugfs_remove_recursive(sc->debugfs_dir);
++
++	kfree(sc->reg_hosttime);
++
++	for (i = 0; i < 17; i++) {
++		kfree(sc->reg_log[i]);
++	}
+ }
+ 
+ void ath9k_deinit_device(struct ath_softc *sc)
+@@ -962,6 +1174,10 @@ static int __init ath9k_init(void)
+ {
+ 	int error;
+ 
++	//edit from bluse
++//	ath9k_debugfs_dir = debugfs_create_dir("bluse", NULL);
++	//end edit from bluse
++
+ 	/* Register rate control algorithm */
+ 	error = ath_rate_control_register();
+ 	if (error != 0) {
+@@ -1002,5 +1218,10 @@ static void __exit ath9k_exit(void)
+ 	ath_pci_exit();
+ 	ath_rate_control_unregister();
+ 	pr_info("%s: Driver unloaded\n", dev_info);
++
++	//edit from bluse
++//	debugfs_remove(ath9k_debugfs_dir);
++	//end edit from bluse
++
+ }
+ module_exit(ath9k_exit);
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -87,6 +87,7 @@ void ath9k_ps_wakeup(struct ath_softc *s
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	unsigned long flags;
+ 	enum ath9k_power_mode power_mode;
++	//int res;
+ 
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 	if (++sc->ps_usecount != 1)
+@@ -592,6 +593,7 @@ static int ath9k_start(struct ieee80211_
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_channel *curchan = hw->conf.channel;
+ 	struct ath9k_channel *init_channel;
++	// static struct timespec ts;
+ 	int r;
+ 
+ 	ath_dbg(common, CONFIG,
