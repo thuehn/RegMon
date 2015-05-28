@@ -16,12 +16,9 @@ _________________________/\/\/\/\________________________________________
 - R scripts to perform statistics and generate plots
 
 ### How to reference to  RegMon ?
-RegMon is developed as measurement tool in the dissertation of Thomas Huehn as OpenSource.
-(http://opus4.kobv.de/opus4-tuberlin/frontdoor/index/index/docId/3939)
-
 Just use the following bibtex :
 ```
-@phdthesis{Huehn2013,
+@PhdThesis{Huehn2013,
  author      = {Thomas H{\"u}hn},
  title       = {A Measurement-Based Joint Power and Rate Controller for IEEE 802.11 Networks},
  school      = {Technische Universit{\"a}t Berlin, FG INET Prof. Anja Feldmann},
