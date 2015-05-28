@@ -6,12 +6,9 @@ _/\/\__/\/\___/\/\_________/\/\/\/\_/\/\__/\__/\/\_/\/\__/\/\_/\/\__/\/\_
 _/\/\____/\/\___/\/\/\/\_______/\/\_/\/\______/\/\___/\/\/\___/\/\__/\/\_
 _________________________/\/\/\/\________________________________________
 ```
-
-## RegMon
 **...provides a measurement tool set for wireless research with Atheros WiFi hardware**
 
-
-### This git repo includes:
+### This RegMon git repo includes:
 
 - RegMon measurement tool provided as patches for ath5k, ath9k and madwifi Linux drivers in OpenWRT
 - shell scripts to set up measurements on OpenWRT WiFi routers
@@ -27,7 +24,10 @@ Just use the following bibtex :
 @phdthesis{Huehn2013,
  author      = {Thomas H{\"u}hn},
  title       = {A Measurement-Based Joint Power and Rate Controller for IEEE 802.11 Networks},
- year        = {2013}
+ school      = {Technische Universit{\"a}t Berlin, FG INET Prof. Anja Feldmann},
+ year        = 2013,
+ month       = July,
  urn         = {urn:nbn:de:kobv:83-opus4-39397},
+ url         = {http://opus4.kobv.de/opus4-tuberlin/frontdoor/index/index/docId/3939}
 }
 ```
