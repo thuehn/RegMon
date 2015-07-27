@@ -8,6 +8,11 @@ _________________________/\/\/\/\________________________________________
 ```
 **...provides a measurement tool set for wireless research with Atheros WiFi hardware**
 
+RegMon is implemented as a single kernel driver patch  for each of the supported three drivers, without the need for additional modules, daemons or user-space applications.
+All main functions of RegMon and their interactions are:
+
+![alt tag](https://cloud.githubusercontent.com/assets/1880886/8918836/070378ec-34bb-11e5-9452-9825a0f52bfa.jpg)
+
 ### This RegMon git repo includes:
 
 - RegMon measurement tool provided as patches for ath5k, ath9k and madwifi Linux drivers in OpenWRT
