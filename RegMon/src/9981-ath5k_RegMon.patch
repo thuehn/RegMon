@@ -1,64 +1,55 @@
 --- a/drivers/net/wireless/ath/ath5k/base.c
 +++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -238,6 +238,153 @@ static const struct ath_ops ath5k_common
+@@ -246,6 +246,153 @@ static const struct ath_ops ath5k_common
  	.write = ath5k_iowrite32,
  };
  
-+//begin Bluse
-+
-+static int
-+reg_log_open(struct inode *inode, struct file *file)
-+{
-+	file->private_data = inode->i_private;
-+	return 0;
-+}
-+
++/* RegMon reads from userspace */
 +static ssize_t
 +reg_log_read(struct file *file, char __user *userbuf, size_t count, loff_t *ppos)
 +{
 +	struct ath5k_hw *ah = file->private_data;
 +	char buf[256];
-+	size_t available, n, ret;
-+	loff_t pos;
++	size_t len, n, ret;
 +	size_t sum = 0;
++	loff_t pos;
++	u8 i;
 +
 +	spin_lock_bh(&ah->reg_lock);
 +
 +	while (ah->reg_last != ah->reg_current && count > 0) {
 +		spin_unlock_bh(&ah->reg_lock);
 +
-+		available = scnprintf(buf, sizeof(buf), "%.19lld %.8x%.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x %.8x\n",
-+			ah->reg_hosttime[ah->reg_last],
-+			(unsigned int) ah->reg_log[0][ah->reg_last],
-+			(unsigned int) ah->reg_log[1][ah->reg_last],
-+			(unsigned int) ah->reg_log[2][ah->reg_last],
-+			(unsigned int) ah->reg_log[3][ah->reg_last],
-+			(unsigned int) ah->reg_log[4][ah->reg_last],
-+			(unsigned int) ah->reg_log[5][ah->reg_last],
-+			(unsigned int) ah->reg_log[6][ah->reg_last],
-+			(unsigned int) ah->reg_log[7][ah->reg_last],
-+			(unsigned int) ah->reg_log[8][ah->reg_last],
-+			(unsigned int) ah->reg_log[9][ah->reg_last],
-+			(unsigned int) ah->reg_log[10][ah->reg_last],
-+			(unsigned int) ah->reg_log[11][ah->reg_last]);
++		/* first entry host time, second wifi cards mac time */
++		len = scnprintf(buf, sizeof(buf), "%.19lld %.8x%.8x",
++				ah->reg_hosttime[ah->reg_last],
++				(unsigned int) ah->reg_log[0][ah->reg_last],
++				(unsigned int) ah->reg_log[1][ah->reg_last]);
++
++		/* print register values */
++		for (i = 2; i < MAX_REG_COUNT; i++) {
++			len += scnprintf(buf + len, sizeof(buf) - len,
++					 " %.8x", (unsigned int)
++					 ah->reg_log[i][ah->reg_last]);
++		}
++
++		/* add line wrap */
++		len += scnprintf(buf + len, sizeof(buf) - len, "\n");
 +
 +		n = 0;
-+		if (*ppos < available && count > 0) {
++		if (*ppos < len && count > 0) {
 +			n = count;
 +			pos = *ppos;
 +
-+			if (pos < 0) {
++			if (pos < 0)
 +				return -EINVAL;
-+			}
 +
-+			if (n > available - pos) {
-+				n = available - pos;
-+			}
++			if (n > len - pos)
++				n = len - pos;
 +
 +			ret = copy_to_user(userbuf, buf + pos, n);
-+			if (ret == n) {
++			if (ret == n)
 +				return -EFAULT;
-+			}
 +
 +			n -= ret;
 +			*ppos = pos + n;
@@ -68,16 +59,14 @@
 +
 +		sum += n;
 +		count -= n;
-+		if (count <= 0) {
++		if (count <= 0)
 +			break;
-+		}
 +
 +		userbuf += n;
 +		*ppos = 0;
 +
-+		if (++ah->reg_last >= REG_LOG_ROWS - 1) {
++		if (++ah->reg_last >= REG_LOG_ROWS - 1)
 +			ah->reg_last = 0;
-+		}
 +	}
 +
 +	spin_unlock_bh(&ah->reg_lock);
@@ -85,137 +74,150 @@
 +	return sum;
 +}
 +
++/* RegMon file handles */
 +static const struct file_operations reg_log_ops = {
 +	.read = reg_log_read,
-+	.open = reg_log_open,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
 +};
 +
-+// Register logger via htimer
++/* Register RegMons periodic readings via htimer */
 +static enum hrtimer_restart read_registers(struct hrtimer *hrtimer)
 +{
 +	struct hrtimer_mod  *hrtm = container_of(hrtimer, struct hrtimer_mod, timer);
 +	struct ath5k_hw *ah = container_of(hrtm, struct ath5k_hw, hrtm);
-+	int i;
 +	static struct timespec ts;
++	int i;
 +
-+	if (ah->shutdown) {
++	if (ah->shutdown)
 +		return HRTIMER_NORESTART;
-+	}
 +
-+	// get current kernel time only once per REG_LOG_ROW cycle
++	/* get current kernel time per row */
 +	getnstimeofday(&ts);
 +	ah->reg_hosttime[ah->reg_current] = timespec_to_ns(&ts);
 +
-+	ah->reg_log[0][ah->reg_current] = ath5k_hw_reg_read(ah, 0x8050); //TSF_upper
-+	ah->reg_log[1][ah->reg_current] = ath5k_hw_reg_read(ah, 0x804c); //TSF_lower
++	/* get upper 32-bit tsf timestamp from card */
++	ah->reg_log[0][ah->reg_current] = ath5k_hw_reg_read(ah, 0x8050);
++	/* get lower 32-bit tsf timestamp from card */
++	ah->reg_log[1][ah->reg_current] = ath5k_hw_reg_read(ah, 0x804c);
 +
-+	// freeze all MIB registers on Atheros hardware
-+	ath5k_hw_reg_write(ah, AR5K_MIBC_FMC, AR5K_MIBC);
++	/* freeze all MIB registers */
++	ath5k_hw_reg_write(ah, AR_MIBC, AR_MIBC_FMC);
 +
++	/* read current MAC states from hardware registers
++	 * 0x80f8 -> MAC cycles (number of clock cycles at a given clock speed)
++	 *                      5GHz @20MHz -> tick freq. = 40MHz
++	 *                      5GHz @40MHz -> tick freq. = 80MHz
++	 *                      2.4GHz @20MHz -> tick freq. = 44MHz
++	 *                      2.4GHz @40MHz -> tick freq. = 88MHz
++	 * 0x80ec -> TX busy (number of cycles the transmitter unit is active)
++	 * 0x80f0 -> RX busy (number of cycles the receiver unit is active)
++	 * 0x80f4 -> MAC busy (sum of TX, RX and energy detection busy cycles) */
 +	ah->reg_log[2][ah->reg_current] = ath5k_hw_reg_read(ah, 0x80f8); //MAC counter
 +	ah->reg_log[3][ah->reg_current] = ath5k_hw_reg_read(ah, 0x80ec); //TX busy
 +	ah->reg_log[4][ah->reg_current] = ath5k_hw_reg_read(ah, 0x80f0); //RX busy
 +	ah->reg_log[5][ah->reg_current] = ath5k_hw_reg_read(ah, 0x80f4); //ED busy
 +
-+	// unfreeze MIB
-+	ath5k_hw_reg_write(ah, 0, AR5K_MIBC);
++	/* un-freeze MIB registers */
++	ath5k_hw_reg_write(ah, AR_MIBC, 0);
 +
-+	// read tsf time again to get duration of MIB readings
-+	ah->reg_log[6][ah->reg_current] = ath5k_hw_reg_read(ah, 0x804c); //TSF_lower
++	/* read lower 32-bit tsf again to calc duration of MAC state readings */
++	ah->reg_log[6][ah->reg_current] = ath5k_hw_reg_read(ah, 0x804c);
 +
-+	// read register values if specified from user space
-+	for (i = 7; i < 12; i++) {
-+		if (ah->reg[i] > 0)
++	/* if set, than read additional register values [7...MAX_REG_COUNT] */
++	for (i = 7; i < MAX_REG_COUNT; i++) {
++		if (ah->reg[7] != 0)
 +			ah->reg_log[i][ah->reg_current] = ath5k_hw_reg_read(ah, ah->reg[i]);
 +		else
 +			ah->reg_log[i][ah->reg_current] = 0;
 +	}
 +
++	/* handle ring buffer writings */
 +	spin_lock(&ah->reg_lock);
-+
 +	if (++ah->reg_current > REG_LOG_ROWS - 1)
 +		ah->reg_current = 0;
-+
-+	if (ah->reg_last == ah->reg_current) {
-+		if (++ah->reg_last > REG_LOG_ROWS - 1)
-+			ah->reg_last = 0;
-+	}
-+
++	if ((ah->reg_last == ah->reg_current) &&
++	    (++ah->reg_last > REG_LOG_ROWS - 1))
++		ah->reg_last = 0;
 +	spin_unlock(&ah->reg_lock);
 +
++	/* set sampling interval if changed */
 +	if (ah->reg_interval > 0)
 +		hrtimer_forward(hrtimer, ktime_get(), ns_to_ktime(ah->reg_interval));
 +	else
-+		hrtimer_forward(hrtimer, ktime_get(), ns_to_ktime(100000000));
++		hrtimer_forward(hrtimer, ktime_get(), ns_to_ktime(10000000));
++
 +	return HRTIMER_RESTART;
 +}
-+//end Bluse
 +
  /***********************\
  * Driver Initialization *
  \***********************/
-@@ -2435,7 +2582,7 @@ ath5k_init_ah(struct ath5k_hw *ah, const
+@@ -2536,8 +2683,10 @@ ath5k_init_ah(struct ath5k_hw *ah, const
  {
  	struct ieee80211_hw *hw = ah->hw;
  	struct ath_common *common;
 -	int ret;
-+	int ret, i, res;
- 	int csz;
+-	int csz;
++	int ret, i, res, csz;
++	/* RegMon varaibles*/
++	char *name;
++	char text[32];
  
  	/* Initialize driver private data */
-@@ -2580,6 +2727,43 @@ ath5k_init_ah(struct ath5k_hw *ah, const
+ 	SET_IEEE80211_DEV(hw, ah->dev);
+@@ -2675,6 +2824,49 @@ ath5k_init_ah(struct ath5k_hw *ah, const
  
  	ath5k_debug_init_device(ah);
  
-+//begin Bluse
++#ifdef CPTCFG_ATH9K_DEBUGFS
++	/* RegMon debugfs entries */
 +	ah->reg_hosttime = kmalloc(REG_LOG_ROWS * sizeof(s64), GFP_KERNEL);
-+	for (i = 0; i < 12; i++)
++
++	for (i = 0; i < MAX_REG_COUNT; i++)
 +		    ah->reg_log[i] = kmalloc(REG_LOG_ROWS * sizeof(u32), GFP_KERNEL);
 +
-+	ah->reg_lock = __SPIN_LOCK_UNLOCKED(RegMon);
++	ah->reg_lock = __SPIN_LOCK_UNLOCKED(regmon);
 +	ah->reg_hz = HZ;
 +
-+	ah->debugfs_dir = debugfs_create_dir("RegMon", ah->hw->wiphy->debugfsdir);
++	ah->debugfs_dir = debugfs_create_dir("regmon", ah->hw->wiphy->debugfsdir);
 +	if (ah->debugfs_dir) {
-+		printk(KERN_ERR "[bluse] RegMon folder created in %p \n", ah->hw->wiphy->debugfsdir);
-+		debugfs_create_u32("reg_interval", S_IWUSR | S_IRUSR, ah->debugfs_dir, &ah->reg_interval);
-+		debugfs_create_u32("reg_hz", S_IRUSR, ah->debugfs_dir, &ah->reg_hz);
-+		debugfs_create_file("reg_log", S_IRUSR, ah->debugfs_dir, ah, &reg_log_ops);
++		debugfs_create_u32("sampling_interval", S_IWUSR | S_IRUSR,
++				   ah->debugfs_dir, &ah->reg_interval);
++		debugfs_create_u32("kernel_hz", S_IRUSR, ah->debugfs_dir,
++				   &ah->reg_hz);
++		debugfs_create_file("register_log", S_IRUSR, ah->debugfs_dir,
++				    ah, &reg_log_ops);
 +
-+		// debugfs entries to change registers from user space
-+		debugfs_create_x32("reg7", S_IWUSR | S_IRUSR, ah->debugfs_dir, &ah->reg[7]);
-+		debugfs_create_x32("reg8", S_IWUSR | S_IRUSR, ah->debugfs_dir, &ah->reg[8]);
-+		debugfs_create_x32("reg9", S_IWUSR | S_IRUSR, ah->debugfs_dir, &ah->reg[9]);
-+		debugfs_create_x32("reg10", S_IWUSR | S_IRUSR, ah->debugfs_dir, &ah->reg[10]);
-+		debugfs_create_x32("reg11", S_IWUSR | S_IRUSR, ah->debugfs_dir, &ah->reg[11]);
++		/* debugfs hocks to specify register adresses from user space */
++		for (i = 7; i < MAX_REG_COUNT; i++) {
++			sprintf(text, "register_%d", i);
++			name = text;
++			debugfs_create_x32(name, S_IWUSR | S_IRUSR,
++					   ah->debugfs_dir, &ah->reg[i]);
++		}
 +
-+		// start hrtimers with normal interval
-+		ah->reg_interval = 1000000000; //1.000.000.000 nsec as initial value
++		/* start hrtimers with default interval of 10.000.000 nsec */
++		ah->reg_interval = 10000000;
 +		hrtimer_init(&ah->hrtm.timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 +		ah->hrtm.timer.function = read_registers;
 +
++		/* a certain delay seems to be needed for proper start */
 +		usleep_range(10000000,20000000);
-+		res = hrtimer_start(&ah->hrtm.timer, ah->hrtm.interval, HRTIMER_MODE_REL);
++		res = hrtimer_start(&ah->hrtm.timer, ah->hrtm.interval,
++		                    HRTIMER_MODE_REL);
 +		if(res)
-+			printk(KERN_ERR "[bluse]: RegMon hrtimer was active\n");
++			printk(KERN_ERR "ath9k debug: regmon got stopped.\n");
 +		else
-+			printk(KERN_ERR "[bluse]: RegMon hrtimer successful starts\n");
++			printk(KERN_ERR "ath9k debug: regmon started successfuly.\n");
 +	}
-+//end Bluse
-+
++#endif
 +
  	/* ready to process interrupts */
  	__clear_bit(ATH_STAT_INVALID, ah->status);
  
-@@ -2634,6 +2818,7 @@ int ath5k_start(struct ieee80211_hw *hw)
- 	struct ath5k_hw *ah = hw->priv;
- 	struct ath_common *common = ath5k_hw_common(ah);
- 	int ret, i;
-+	//static struct timespec ts;
- 
- 	mutex_lock(&ah->lock);
- 
-@@ -2685,6 +2870,7 @@ int ath5k_start(struct ieee80211_hw *hw)
+@@ -2780,6 +2972,7 @@ int ath5k_start(struct ieee80211_hw *hw)
  		ah->bslot[i] = NULL;
  
  	ret = 0;
@@ -223,7 +225,7 @@
  done:
  	mmiowb();
  	mutex_unlock(&ah->lock);
-@@ -3010,6 +3196,7 @@ void
+@@ -3129,6 +3322,7 @@ void
  ath5k_deinit_ah(struct ath5k_hw *ah)
  {
  	struct ieee80211_hw *hw = ah->hw;
@@ -231,12 +233,12 @@
  
  	/*
  	 * NB: the order of these is important:
-@@ -3038,6 +3225,20 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
+@@ -3157,6 +3351,20 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
  	 */
  	ath5k_hw_deinit(ah);
  	free_irq(ah->irq, ah);
 +
-+	//begin Bluse
++	/* RegMon stop */
 +	printk(KERN_ERR "[bluse] RegMon stop hrtimer \n");
 +	ah->shutdown = 1;
 +	//res = hrtimer_cancel(&ah->hrtm.timer);
@@ -248,102 +250,66 @@
 +	for (i = 0; i < 12; i++) {
 +		    kfree(ah->reg_log[i]);
 +	}
-+	//end Bluse
++	/* RegMon end */
  }
  
  bool
---- a/drivers/net/wireless/ath/ath5k/pci.c
-+++ b/drivers/net/wireless/ath/ath5k/pci.c
-@@ -30,6 +30,10 @@
- #include "base.h"
- #include "reg.h"
- 
-+//edit from bluse
-+//static struct dentry *ath_pci_debugfs_dir;
-+//end edit from bluse
-+
- /* Known PCI ids */
- static DEFINE_PCI_DEVICE_TABLE(ath5k_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0207) }, /* 5210 early */
-@@ -293,6 +297,9 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 	ah->iobase = mem; /* So we can unmap it on detach */
- 
- 	/* Initialize */
-+	//edit from bluse
-+	//ath_pci_debugfs_dir = debugfs_create_dir("bluse", NULL);
-+	//end edit from bluse
- 	ret = ath5k_init_ah(ah, &ath_pci_bus_ops);
- 	if (ret)
- 		goto err_free;
-@@ -324,6 +331,9 @@ ath5k_pci_remove(struct pci_dev *pdev)
- 	pci_release_region(pdev, 0);
- 	pci_disable_device(pdev);
- 	ieee80211_free_hw(hw);
-+	//edit from bluse
-+	//debugfs_remove(ath_pci_debugfs_dir);
-+	//end edit from bluse
- }
- 
- #ifdef CONFIG_PM_SLEEP
 --- a/drivers/net/wireless/ath/ath5k/ath5k.h
 +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -30,6 +30,13 @@
- #include <linux/leds.h>
+@@ -31,6 +31,17 @@
  #include <net/mac80211.h>
+ #include <net/cfg80211.h>
  
-+//edit from Bluse
-+#include <linux/debugfs.h>
-+#include <linux/time.h>
-+#include <linux/hrtimer.h>
-+#define REG_LOG_ROWS 2000
-+//end edit from Bluse
++#ifdef CPTCFG_ATH9K_DEBUGFS
++	/* RegMon */
++	#include <linux/debugfs.h>
++	#include <linux/time.h>
++	#include <linux/hrtimer.h>
++	/* maximum number of 32-bit registers RegMon monitors */
++	#define MAX_REG_COUNT 12
++	/* maximum size RegMons ringbuffer in number of rows */
++	#define REG_LOG_ROWS 30000
++#endif
 +
  /* RX/TX descriptor hw structs
   * TODO: Driver part should only see sw structs */
  #include "desc.h"
-@@ -1251,6 +1258,13 @@ struct ath5k_statistics {
+@@ -1252,6 +1263,14 @@ struct ath5k_statistics {
  #define ATH5K_TXQ_LEN_MAX	(ATH_TXBUF / 4)		/* bufs per queue */
  #define ATH5K_TXQ_LEN_LOW	(ATH5K_TXQ_LEN_MAX / 2)	/* low mark */
  
-+//begin Bluse
-+struct hrtimer_mod {
-+        struct hrtimer timer;		/* the hrtime */
-+        ktime_t interval;		/* interval to use in hrtimer_forward */
-+};
-+//end Bluse
++#ifdef CPTCFG_ATH9K_DEBUGFS
++	/* RegMon hrtimer */
++	struct hrtimer_mod {
++		struct hrtimer timer;		/* the hrtime */
++		ktime_t interval;		/* interval in hrtimer_forward */
++	};
++#endif
 +
  /* Driver state associated with an instance of a device */
  struct ath5k_hw {
  	struct ath_common       common;
-@@ -1343,6 +1357,22 @@ struct ath5k_hw {
+@@ -1345,6 +1364,23 @@ struct ath5k_hw {
  
  	struct survey_info	survey;		/* collected survey info */
  
-+	//begin Bluse
-+	int			shutdown;
-+	struct dentry		*debugfs_dir;
-+	spinlock_t		reg_lock;
++#ifdef CPTCFG_ATH9K_DEBUGFS
++	/* RegMon */
++	s64			*reg_hosttime;
 +	u32			reg_interval;
 +	u32			reg_hz;
-+	u32			reg[12];
-+	struct timer_list	reg_timer;
-+	s64			*reg_hosttime;
-+	u32			*reg_log[12];
++	u32			reg[MAX_REG_COUNT];
++	u32			*reg_log[MAX_REG_COUNT];
 +	int			reg_last;
 +	int			reg_current;
-+	u16			reg_count;
-+	struct			hrtimer_mod hrtm;
-+	//end Bluse
++	int			reg_count;
++	int			shutdown;
++	spinlock_t		reg_lock;
++	struct dentry		*debugfs_dir;
++	struct timer_list	reg_timer;
++	struct hrtimer_mod	hrtm;
++#endif
 +
  	enum ath5k_int		ah_imr;
  
  	struct ieee80211_channel *ah_current_channel;
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1406,5 +1406,6 @@ ath5k_hw_reset(struct ath5k_hw *ah, enum
- 	 */
- 	AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
- 	ath5k_hw_reset_tsf(ah);
-+
- 	return 0;
- }
