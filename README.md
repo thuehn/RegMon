@@ -13,6 +13,18 @@ All main functions of RegMon and their interactions are:
 
 ![alt tag](https://cloud.githubusercontent.com/assets/1880886/8918836/070378ec-34bb-11e5-9452-9825a0f52bfa.jpg)
 
+### RegMon - in-Kernel MAC-Layer Monitoring
+To perform the monitoring, we leverage the lightweight kernel-to-userspace debug file system (debugfs)
+This serves two purposes:
+
+- (1) it enables a a simple file-based configuration of RegMon for its in-kernel operations from the userspace
+- (2) the actual trace-file from the kernel can be accessed via standard file read (e.g., with tail, cat) from the userspace.
+
+For the actual measurements, it is possible to access Atheros control and status registers stored in the card memory through the PCI bus. Each of the Linux drivers (i.e., Madwifi, ath5k and ath9k) has its own C functions or macros to access the memory-mapped 32-bit register content, as shown at the bottom of the RegMon picture.
+
+The Linux kernel function 'readl()' is called to read the current register value at the memory address that was passed to it, respecting different host endianness and memory mapping specifics. For every register read, we store the current timestamp and the raw hexadecimal register values. Each column, except the first one holding the current timestamp, represents a register address specified through debugfs from the user-space. In our current implementation, we can monitor up to 12 registers in parallel. 
+The main limiting factor for the number of registers is the memory footprint of the data structure to hold these values in the kernel.
+
 ### This RegMon git repo includes:
 
 - RegMon measurement tool provided as patches for ath5k, ath9k and madwifi Linux drivers in OpenWRT
