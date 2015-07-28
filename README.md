@@ -40,6 +40,8 @@ cat /sys/kernel/debug/ieee80211/phy0/regmon/register_log
 ```
 echo XY-REGISTER-VALUE > /sys/kernel//debug/ieee80211/phy0/regmon/reg7..11
 ```
+- collect RegMon traces, parse, analyze and plot them
+(in the script folder there are several unsorted awk, shell, R & python scipts that I wrote & use .. ToDo: clean-up)
 
 ### This RegMon git repo includes:
 
