@@ -8,11 +8,6 @@ _________________________/\/\/\/\________________________________________
 ```
 **...provides a measurement tool set for wireless research with Atheros WiFi hardware**
 
-RegMon is implemented as a single kernel driver patch  for each of the supported three drivers, without the need for additional modules, daemons or user-space applications.
-All main functions of RegMon and their interactions are:
-
-![alt tag](https://cloud.githubusercontent.com/assets/1880886/8918836/070378ec-34bb-11e5-9452-9825a0f52bfa.jpg)
-
 ### RegMon - in-Kernel MAC-Layer Monitoring
 To perform the monitoring, we leverage the lightweight kernel-to-userspace debug file system (debugfs)
 This serves two purposes:
@@ -24,6 +19,11 @@ For the actual measurements, it is possible to access Atheros control and status
 
 The Linux kernel function 'readl()' is called to read the current register value at the memory address that was passed to it, respecting different host endianness and memory mapping specifics. For every register read, we store the current timestamp and the raw hexadecimal register values. Each column, except the first one holding the current timestamp, represents a register address specified through debugfs from the user-space. In our current implementation, we can monitor up to 12 registers in parallel. 
 The main limiting factor for the number of registers is the memory footprint of the data structure to hold these values in the kernel.
+
+RegMon is implemented as a single kernel driver patch  for each of the supported three drivers, without the need for additional modules, daemons or user-space applications.
+All main functions of RegMon and their interactions are:
+
+![alt tag](https://cloud.githubusercontent.com/assets/1880886/8918836/070378ec-34bb-11e5-9452-9825a0f52bfa.jpg)
 
 ### This RegMon git repo includes:
 
