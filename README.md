@@ -74,3 +74,5 @@ Just use the following bibtex :
  url         = {http://opus4.kobv.de/opus4-tuberlin/frontdoor/index/index/docId/3939}
 }
 ```
+### Where do I get the full description of RegMon ?
+[Have a look at chapter 4 of my dissertaion](https://opus4.kobv.de/opus4-tuberlin/files/3939/huehn_thomas.pdf)
