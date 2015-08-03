@@ -40,6 +40,17 @@ cat /sys/kernel/debug/ieee80211/phy0/regmon/register_log
 ```
 echo XY-REGISTER-VALUE > /sys/kernel//debug/ieee80211/phy0/regmon/reg7..11
 ```
+
+For availabe Atheros registers take a look at:
+```
+- ath5k:
+  drivers/net/wireless/ath/ath5k/reg.h
+- ath9k:
+  drivers/net/wireless/ath/ath9k/ath9k/ar5008_initvals.h
+  drivers/net/wireless/ath/ath9k/ath9k/ar9001_initvals.h
+  drivers/net/wireless/ath/ath9k/ath9k/ar9002_initvals.h
+```
+
 - collect RegMon traces, parse, analyze and plot them
 (in the script folder there are several unsorted awk, shell, R & python scipts that I wrote & use .. ToDo: clean-up)
 
