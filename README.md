@@ -77,4 +77,4 @@ Just use the following bibtex :
 }
 ```
 ### Where do I get the full description of RegMon ?
-[Have a look at chapter 4 of my dissertaion](https://opus4.kobv.de/opus4-tuberlin/files/3939/huehn_thomas.pdf)
+[Have a look at chapter 4 of my dissertaion](https://www.researchgate.net/publication/257412979_A_measurement_based_joint_power_and_rate_controller_for_IEEE_802.11_networks)
