@@ -50,9 +50,11 @@ For availabe Atheros registers take a look at:
   drivers/net/wireless/ath/ath9k/ath9k/ar9001_initvals.h
   drivers/net/wireless/ath/ath9k/ath9k/ar9002_initvals.h
 ```
-
 - collect RegMon traces, parse, analyze and plot them
 (in the script folder there are several unsorted awk, shell, R & python scipts that I wrote & use .. ToDo: clean-up)
+
+### Example of RegMon's logging output
+![alt tag](https://cloud.githubusercontent.com/assets/1880886/9058435/50d96800-3aa1-11e5-98c9-330c7aa15234.jpg)
 
 ### This RegMon git repo includes:
 
