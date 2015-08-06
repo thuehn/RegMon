@@ -79,7 +79,7 @@ You can use it by issuing:
 cat register_log | gawk --non-decimal-data -v header=1 -c clock=40 -f parse_default_RegMon-trace.awk
 ```
 
-this leads to the following output, that can plotted easily:
+this leads to the following output:
 ```
 ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others d_read mib_reset
 1438783037053890000 9994 9993 879229 0 0.0 118571 13.5 129987 14.8 749242 85.2 11416 1.3 2 0
@@ -104,6 +104,9 @@ where:
 - rel_others = relative (energy_detection - rx_busy) state count per mac counts in percent
 - d_read = time duration it took to read all busdy state registers in nanoseconds
 - mib_reset = if a MIB register reset happened, it will show a '1', otherwise a '0'
+
+... and now you can plot your mac state trace with e.g. 'R', which will look like:
+![alt tag](https://cloud.githubusercontent.com/assets/1880886/9112743/c1cca18e-3c50-11e5-8474-e4eabce5b95d.jpg)
 
 ### This RegMon git repo includes:
 
