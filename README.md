@@ -42,7 +42,7 @@ echo 50000 > /sys/kernel//debug/ieee80211/phy0/regmon/sampling_interval
 ```
 - read RegMon data e.g. via:
 ```
-cat /sys/kernel/debug/ieee80211/phy0/regmon/register_log
+tail -f /sys/kernel/debug/ieee80211/phy0/regmon/register_log
 ```
 
 For availabe Atheros registers take a look at:
@@ -107,6 +107,23 @@ where:
 
 ... and now you can plot your mac busy state distribution over time with e.g. 'R':
 ![alt tag](https://cloud.githubusercontent.com/assets/1880886/9112743/c1cca18e-3c50-11e5-8474-e4eabce5b95d.jpg)
+
+### Best practice for experimentation with RegMon
+- RegMon traces at high sampling intervals create quite a bit of measurement data. The use of a compression stage is recommended and I prefer the lzop compressor which compresses a RegMon trace by a factor of ~4 with low cpu impact:
+```
+tail -f /sys/kernel/debug/ieee80211/phy0/regmon/register_log | lzop > /tmp/register_log.lzop
+```
+
+- if you do not have sufficient local disk space on your router, I use *netcat* on the router and client, to transfer the RegMon trace e.g. over ethernet:
+ - on your router open a netcat server:
+ ```
+ ( while true; do netcat -l -p 1234 -e /bin/sh ; sleep 1; done ) &
+ ```
+ - on your Laptop connect to your router and save the actual trace file:
+ ```
+ START_REGMON="tail -n0 -F /sys/kernel/debug/ieee80211/phy0/regmon/register_log | lzop -1 -cf; exit"
+ echo "${START_REGMON}" | netcat $your_router_IP 1234 > /tmp/register_log.lzo
+ ```
 
 ### This RegMon git repo includes:
 
