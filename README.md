@@ -105,7 +105,7 @@ where:
 - d_read = time duration it took to read all busdy state registers in nanoseconds
 - mib_reset = if a MIB register reset happened, it will show a '1', otherwise a '0'
 
-... and now you can plot your mac state trace with e.g. 'R', which will look like:
+... and now you can plot your mac busy state distribution over time with e.g. 'R':
 ![alt tag](https://cloud.githubusercontent.com/assets/1880886/9112743/c1cca18e-3c50-11e5-8474-e4eabce5b95d.jpg)
 
 ### This RegMon git repo includes:
