@@ -60,6 +60,51 @@ For availabe Atheros registers take a look at:
 ### Example of RegMon's logging output
 ![alt tag](https://cloud.githubusercontent.com/assets/1880886/9058435/50d96800-3aa1-11e5-98c9-330c7aa15234.jpg)
 
+### Parse logging output of RegMon to prepare ploting
+In order to plot your register values that were collected by RegMon, someone could parse and precalculate certain values of interest.
+
+The provided awk script **parse_default_RegMon-trace.awk** is such an example of preprocessing the output of RegMon for proper plotting. It performs the following operations with RegMon default output:
+- calculate the absolute and relative difference of timestamps and register counters for each line sampled
+- account for the baseband MAC clock rate at different IEEE 8021.11 modes, e.g:
+ - 802.11g 20MHz channel width @2.4GHz -> MAC clock rate = 44MHz
+ - 802.11a 20MHz channel width @5GHz   -> MAC clock rate = 40MHz
+ - 802.11n 40MHz channel width @2.4GHz -> MAC clock rate = 88MHz
+ - 802.11n 40MHz channel width @5GHz   -> MAC clock rate = 80MHz
+ - all other MAC clocl rates at different channel width are a multiple of those given above
+- change hexadecimal representation into decimal
+- add an optional header to the parsed data
+
+You can use it by issuing:
+```
+cat register_log | gawk --non-decimal-data -v header=1 -c clock=40 -f parse_default_RegMon-trace.awk
+```
+
+this leads to the following output, that can plotted easily:
+```
+ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others d_read mib_reset
+1438783037053890000 9994 9993 879229 0 0.0 118571 13.5 129987 14.8 749242 85.2 11416 1.3 2 0
+1438783037063896520 10007 10008 880524 0 0.0 66916 7.6 68516 7.8 812008 92.2 1600 0.2 2 0
+1438783037073890425 9994 9992 879200 0 0.0 97463 11.1 107573 12.2 771627 87.8 10110 1.1 3 0
+1438783037083902715 10012 10014 881044 0 0.0 344757 39.1 351705 39.9 529339 60.1 6948 0.8 3 0
+```
+where:
+- ktime = kernel time stamp
+- d_ktime = time difference in nanoseconds from previous kernel time stamp
+- d_tsf = time difference in nanoseconds from previous tsf time stamp
+- d_mac = absolute mac count difference in ticks from previous sample
+- d_tx = absolute tx busy state count difference in ticks from previous sample
+- rel_tx = relative tx_busy state count per mac counts in percent
+- d_rx = absolute rx busy state count difference in ticks from previous sample
+- rel_rx =relative rx_busy state count per mac counts in percent
+- d_ed = absolute energy_detection busy state count difference in ticks from previous sample
+- rel_ed = relative energy_detection state count per mac counts in percent
+- d_idle = absolute idle state count difference in ticks from previous sample
+- rel_idle = relative idle state state count per mac counts in percent
+- d_others = absolute (energy_detection - rx_busy) state count difference in ticks from previous sample
+- rel_others = relative (energy_detection - rx_busy) state count per mac counts in percent
+- d_read = time duration it took to read all busdy state registers in nanoseconds
+- mib_reset = if a MIB register reset happened, it will show a '1', otherwise a '0'
+
 ### This RegMon git repo includes:
 
 - RegMon measurement tool provided as patches for ath5k, ath9k and madwifi Linux drivers in OpenWRT
