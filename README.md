@@ -84,7 +84,7 @@ The provided awk script **parse_default_RegMon-trace.awk** is such an example of
 
 You can use it by issuing:
 ```
-cat register_log | gawk --non-decimal-data -v header=1 -c clock=40 -f parse_default_RegMon-trace.awk
+cat register_log | gawk --non-decimal-data -v header=1 -v clock=40 -f parse_default_RegMon-trace.awk
 ```
 
 this leads to the following output:
