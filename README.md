@@ -40,7 +40,7 @@ This first 7 registers are hardcoded into RegMon, which are:
 - register_5 = energy_detection state in clock ticks
 - register_6 = TSF lower time stamp
 
-- specify you own register reads via: 
+Specify you own **register_7..11** via: 
 ```
 echo XY-REGISTER-VALUE > /sys/kernel//debug/ieee80211/phy0/regmon/reg7..11
 ```
