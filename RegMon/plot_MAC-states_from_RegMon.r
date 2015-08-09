@@ -16,9 +16,11 @@ max_x <- max(all_mac$ktime/1000000000)
 p1 = ggplot(data=all_mac, aes (x=ktime/1000000000)) +
     geom_histogram(aes(fill=factor(variable), weight=abs(value)), position="fill", binwidth = 1) +
     geom_hline(yintercept = seq(0,1,0.25), color="grey50", linetype="dashed", size=0.3) +
+    geom_hline(yintercept = seq(0.125,1,0.25), color="grey50", linetype="dotted", size=0.3) +
     geom_vline(xintercept = seq(0,max_x, by = round(max_x/5)), color="grey50", linetype="dashed", size=0.3) +
+    geom_vline(xintercept = seq(max_x/10,max_x, by = round(max_x/5)), color="grey50", linetype="dotted", size=0.3) +
     scale_y_continuous(labels = percent_format()) +
-    scale_x_continuous(limits=c(0, max_x), breaks = seq(0, max_x, by = round(max_x/5))) +
+    scale_x_continuous(limits=c(0, max_x), breaks = seq(0, max_x, by = round(max_x/5)), minor_breaks = seq(0, max_x, by = round(max_x/10))) +
     labs(x = "Time [s]", y = "relative dwell time [%]") +
     theme_bw() +
     labs(title = "Distribution of MAC-States over Time") +
