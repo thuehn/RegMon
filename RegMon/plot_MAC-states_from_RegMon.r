@@ -1,9 +1,7 @@
 #!/usr/bin/Rscript --vanilla
 
 library(ggplot2)
-library(plyr)
 library(reshape2)
-library(magrittr)
 
 label_wrap <- function(variable, value) {
     laply(strwrap(as.character(value), width=5, simplify=FALSE), paste, collapse="\n")
