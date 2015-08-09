@@ -82,7 +82,7 @@ The provided awk script **parse_default_RegMon-trace.awk** is such an example of
 - change hexadecimal representation into decimal
 - add an optional header to the parsed data
 
-You can use it by issuing:
+You can use the provided awk parser by issuing:
 ```
 cat register_log | gawk --non-decimal-data -v header=1 -v clock=44 -f parse_default_RegMon-trace.awk
 ```
@@ -107,7 +107,7 @@ where:
 - d_idle = absolute idle state count difference in ticks from previous sample
 - d_others = absolute (energy_detection - rx_busy) state count difference in ticks from previous sample
 
-... and now you can plot your mac busy state distribution over time, with e.g. 'R':
+... and now you can plot your mac busy state distribution over time. I prefer Rscript for plotting and so there is an example Rscript *plot_MAC-states_from_RegMon.r* which generates the output plot *RegMon.png*. For the Rscript to work you need R and the R packages: gglpot and reshape2.
 ```
 cat register_log | gawk --non-decimal-data -v header=1 -v clock=44 -f parse_default_RegMon-trace.awk | ./plot_MAC-states_from_RegMon.r
 open RegMon.png
