@@ -109,7 +109,10 @@ where:
 
 ... and now you can plot your mac busy state distribution over time. I prefer Rscript for plotting and so there is an example Rscript *plot_MAC-states_from_RegMon.r* which generates the output plot *RegMon.png*. For the Rscript to work you need R and the R packages: gglpot and reshape2.
 ```
-cat register_log | gawk --non-decimal-data -v header=1 -v clock=44 -f parse_default_RegMon-trace.awk | ./plot_MAC-states_from_RegMon.r
+cat register_log | \
+  gawk --non-decimal-data -v header=1 -v clock=44 -f parse_default_RegMon-trace.awk | \
+  ./plot_MAC-states_from_RegMon.r
+  
 open RegMon.png
 ```
 
