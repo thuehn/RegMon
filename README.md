@@ -113,7 +113,7 @@ cat register_log | gawk --non-decimal-data -v header=1 -v clock=44 -f parse_defa
 open RegMon.png
 ```
 
-![alt tag](https://cloud.githubusercontent.com/assets/1880886/9112743/c1cca18e-3c50-11e5-8474-e4eabce5b95d.jpg)
+![alt tag](https://cloud.githubusercontent.com/assets/1880886/9155283/6ad13628-3eb3-11e5-96b3-f78cbcc6b7c5.png)
 
 ### Best practice for experimentation with RegMon
 - RegMon traces at high sampling intervals create quite a bit of measurement data. The use of a compression stage is recommended and I prefer the lzop compressor which compresses a RegMon trace by a factor of ~4 with low cpu impact:
