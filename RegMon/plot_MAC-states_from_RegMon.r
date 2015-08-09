@@ -2,6 +2,7 @@
 
 library(ggplot2)
 library(reshape2)
+library(scales)
 
 label_wrap <- function(variable, value) {
     laply(strwrap(as.character(value), width=5, simplify=FALSE), paste, collapse="\n")
@@ -13,14 +14,14 @@ all_mac <- melt(all_mac, id=c("ktime"), measure=c("d_tx","d_rx","d_idle","d_othe
 max_x <- max(all_mac$ktime/1000000000)
 
 p1 = ggplot(data=all_mac, aes (x=ktime/1000000000)) +
-    geom_histogram(aes(fill=factor(variable), weight=abs(value)), position="fill") +
-    scale_y_continuous( breaks = seq(0, 1, by = 0.25),  minor_breaks = seq(0, 1, by = 0.1)) +
-    scale_x_continuous(limits=c(0,max_x), breaks = seq(0, max_x, by = 20),  minor_breaks = seq(0, max_x, by = 10)) +
+    geom_histogram(aes(fill=factor(variable), weight=abs(value)), position="fill", binwidth = 1) +
+    geom_hline(yintercept = seq(0,1,0.25), color="grey50", linetype="dashed", size=0.3) +
+    geom_vline(xintercept = seq(0,max_x,max_x / 10), color="grey50", linetype="dashed", size=0.3) +
+    scale_y_continuous(labels = percent_format()) +
+    scale_x_continuous(limits=c(0, max_x), breaks = seq(0, max_x, by = round(max_x/5))) +
     labs(x = "Time [s]", y = "relative dwell time [%]") +
-    geom_vline(xintercept = seq(0,200,20), color="grey50", linetype="dashed", size=0.3) +
-    geom_hline(yintercept = seq(0,1,0.1), color="grey50", linetype="dashed", size=0.3) +
     theme_bw() +
-    labs(title = "MAC-state distribution") +
+    labs(title = "Distribution of MAC-States over Time") +
     theme(strip.text.x = element_text(size=12),
         strip.text.y = element_text(size=9),
         axis.text.x = element_text(size = 12, colour = "black"),
@@ -34,6 +35,6 @@ p1 = ggplot(data=all_mac, aes (x=ktime/1000000000)) +
         axis.title.y = element_text(angle = 90, vjust = 0.2, hjust = 0.5, size = 15, colour = "black", face="plain"),
         axis.title.x = element_text(vjust = 0.2, hjust = 0.5, size = 15, colour = "black", face="plain")
     ) +
-    scale_fill_manual(values=c("#F55A5A", "#32B2FF", "#F5DA81", "#DA81F5"),name="MAC\nstates",labels=c("tx-busy", "rx-busy", "idle", "others"))
+    scale_fill_manual(values=c("#F55A5A", "#32B2FF", "#F5DA81", "#DA81F5"),name="MAC-\nStates",labels=c("TX-busy", "RX-busy", "IDLE", "Interference"))
 
 ggsave(p1, file="RegMon.png", width=11, height=8, dpi=600)
