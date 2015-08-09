@@ -107,7 +107,7 @@ where:
 - d_idle = absolute idle state count difference in ticks from previous sample
 - d_others = absolute (energy_detection - rx_busy) state count difference in ticks from previous sample
 
-... and now you can plot your mac busy state distribution over time. I prefer Rscript for plotting and so there is an example Rscript *plot_MAC-states_from_RegMon.r* which generates the output plot *RegMon.png*. For the Rscript to work you need R and the R packages: gglpot and reshape2.
+... and now you can plot your mac busy state distribution over time. I prefer Rscript for plotting and so there is an example Rscript *plot_MAC-states_from_RegMon.r* which generates the output plot *RegMon.png*. For the Rscript to work you need R and the R packages: gglpot2, reshape2 and scales.
 ```
 cat register_log | \
   gawk --non-decimal-data -v header=1 -v clock=44 -f parse_default_RegMon-trace.awk | \
