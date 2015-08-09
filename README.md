@@ -118,7 +118,7 @@ open RegMon.png
 
 ![alt tag](https://cloud.githubusercontent.com/assets/1880886/9155283/6ad13628-3eb3-11e5-96b3-f78cbcc6b7c5.png)
 
-### Best practice for experimentation with RegMon
+### Best practice for experimentation with RegMon (but unsecure)
 - RegMon traces at high sampling intervals create quite a bit of measurement data. The use of a compression stage is recommended and I prefer the lzop compressor which compresses a RegMon trace by a factor of ~4 with low cpu impact:
 ```
 tail -f /sys/kernel/debug/ieee80211/phy0/regmon/register_log | lzop > /tmp/register_log.lzop
