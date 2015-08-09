@@ -14,13 +14,14 @@ BEGIN{
 
 	#check if header should be printed
 	if (header == 1)
-	    print "ktime d_ktime d_tsf d_mac d_tx rel_tx d_rx rel_rx d_ed rel_ed d_idle rel_idl d_others rel_others d_read mib_reset";
+	    print "ktime d_tx d_rx d_idle d_others";
 }
 {
 #
 if (NR == 1) {
 	sub(/0*/,"",$1);	#delete leading zeros
-	time		= $1
+	time		= $1;
+	first_timestamp = $1;
 	full_tsf_old	= $2;	#64bit tsf in $2
 	sub(/0*/,"",$2);	#delete leading zeros
 	tsf_1_old	= strtonum(sprintf("%d", "0x" $2));
@@ -47,7 +48,7 @@ else if (NR > 1) {
 			k_time_diff	= "NA";
 			prev_error	= 1;
 		}
-		else{ 
+		else{
 			k_time_diff  =  sprintf("%.0f",(strtonum($1) - strtonum(time))/1000);
 		}
 	}
@@ -154,7 +155,7 @@ else if (NR > 1) {
 	}
 
 	#final print
-	print $1 , k_time_diff, tsf_1_diff, d_mac, d_tx, rel_tx, d_rx, rel_rx, d_ed, rel_ed, d_idle, rel_idle, d_others, rel_others, read_duration, mib_reset
+	print $1 - first_timestamp, d_tx, d_rx, d_idle, d_others
 
 	#refresh lines
 	time_old = time;
