@@ -274,9 +274,9 @@
  /* RX/TX descriptor hw structs
   * TODO: Driver part should only see sw structs */
  #include "desc.h"
-@@ -1252,6 +1263,14 @@ struct ath5k_statistics {
- #define ATH5K_TXQ_LEN_MAX	(ATH_TXBUF / 4)		/* bufs per queue */
- #define ATH5K_TXQ_LEN_LOW	(ATH5K_TXQ_LEN_MAX / 2)	/* low mark */
+@@ -1254,6 +1265,14 @@ struct ath5k_statistics {
+ 
+ DECLARE_EWMA(beacon_rssi, 1024, 8)
  
 +#ifdef CPTCFG_ATH9K_DEBUGFS
 +	/* RegMon hrtimer */
@@ -289,7 +289,7 @@
  /* Driver state associated with an instance of a device */
  struct ath5k_hw {
  	struct ath_common       common;
-@@ -1345,6 +1364,23 @@ struct ath5k_hw {
+@@ -1347,6 +1366,23 @@ struct ath5k_hw {
  
  	struct survey_info	survey;		/* collected survey info */
  
