@@ -160,7 +160,7 @@
  	struct ath_common *common;
 -	int ret;
 -	int csz;
-+	int ret, i, res, csz;
++	int ret, i, csz;
 +	/* RegMon varaibles*/
 +	char *name;
 +	char text[32];
@@ -205,12 +205,9 @@
 +
 +		/* a certain delay seems to be needed for proper start */
 +		usleep_range(10000000,20000000);
-+		res = hrtimer_start(&ah->hrtm.timer, ah->hrtm.interval,
-+		                    HRTIMER_MODE_REL);
-+		if(res)
-+			printk(KERN_ERR "ath9k debug: regmon got stopped.\n");
-+		else
-+			printk(KERN_ERR "ath9k debug: regmon started successfuly.\n");
++		hrtimer_start(&ah->hrtm.timer, ah->hrtm.interval,
++			      HRTIMER_MODE_REL);
++		printk(KERN_ERR "ath9k debug: regmon started successfuly.\n");
 +	}
 +#endif
 +

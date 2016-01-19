@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath9k/ath9k.h
 +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -29,6 +29,16 @@
+@@ -30,6 +30,16 @@
  #include "mci.h"
  #include "dfs.h"
  
@@ -17,7 +17,7 @@
  struct ath_node;
  struct ath_vif;
  
-@@ -962,6 +972,14 @@ struct ath_led {
+@@ -963,6 +973,14 @@ struct ath_led {
  	struct led_classdev cdev;
  };
  
@@ -32,7 +32,7 @@
  struct ath_softc {
  	struct ieee80211_hw *hw;
  	struct device *dev;
-@@ -1019,6 +1037,21 @@ struct ath_softc {
+@@ -1021,6 +1039,21 @@ struct ath_softc {
  
  #ifdef CPTCFG_ATH9K_DEBUGFS
  	struct ath9k_debug debug;
@@ -211,11 +211,11 @@
  static char *dev_info = "ath9k";
  
  MODULE_AUTHOR("Atheros Communications");
-@@ -930,7 +1078,11 @@ int ath9k_init_device(u16 devid, struct
+@@ -932,7 +1080,11 @@ int ath9k_init_device(u16 devid, struct
  	struct ath_common *common;
  	struct ath_hw *ah;
  	int error = 0;
-+	int i, res;
++	int i;
  	struct ath_regulatory *reg;
 +	/* RegMon varaibles*/
 +	char *name;
@@ -223,7 +223,7 @@
  
  	/* Bring up device */
  	error = ath9k_init_softc(devid, sc, bus_ops);
-@@ -991,6 +1143,49 @@ int ath9k_init_device(u16 devid, struct
+@@ -993,6 +1145,46 @@ int ath9k_init_device(u16 devid, struct
  	ath_init_leds(sc);
  	ath_start_rfkill_poll(sc);
  
@@ -261,19 +261,16 @@
 +
 +		/* a certain delay seems to be needed for proper start */
 +		usleep_range(10000000,20000000);
-+		res = hrtimer_start(&sc->hrtm.timer, sc->hrtm.interval,
-+				    HRTIMER_MODE_REL);
-+		if(res)
-+			printk(KERN_ERR "ath9k debug: regmon got stopped.\n");
-+		else
-+			printk(KERN_ERR "ath9k debug: regmon started successfuly.\n");
++		hrtimer_start(&sc->hrtm.timer, sc->hrtm.interval,
++			      HRTIMER_MODE_REL);
++		printk(KERN_ERR "ath9k debug: regmon started successfuly.\n");
 +	};
 +#endif
 +
  	return 0;
  
  debug_cleanup:
-@@ -1011,6 +1206,7 @@ deinit:
+@@ -1013,6 +1205,7 @@ deinit:
  static void ath9k_deinit_softc(struct ath_softc *sc)
  {
  	int i = 0;
@@ -281,7 +278,7 @@
  
  	ath9k_deinit_p2p(sc);
  	ath9k_deinit_btcoex(sc);
-@@ -1024,6 +1220,21 @@ static void ath9k_deinit_softc(struct at
+@@ -1026,6 +1219,21 @@ static void ath9k_deinit_softc(struct at
  	if (sc->dfs_detector != NULL)
  		sc->dfs_detector->exit(sc->dfs_detector);
  
