@@ -167,7 +167,7 @@
  
  	/* Initialize driver private data */
  	SET_IEEE80211_DEV(hw, ah->dev);
-@@ -2675,6 +2824,49 @@ ath5k_init_ah(struct ath5k_hw *ah, const
+@@ -2675,6 +2824,46 @@ ath5k_init_ah(struct ath5k_hw *ah, const
  
  	ath5k_debug_init_device(ah);
  
