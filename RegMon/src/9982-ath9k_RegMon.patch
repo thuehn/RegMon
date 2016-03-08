@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath9k/ath9k.h
 +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -30,6 +30,16 @@
+@@ -31,6 +31,16 @@
  #include "mci.h"
  #include "dfs.h"
  
@@ -17,9 +17,9 @@
  struct ath_node;
  struct ath_vif;
  
-@@ -963,6 +973,14 @@ struct ath_led {
- 	struct led_classdev cdev;
+@@ -972,6 +982,14 @@ struct ath9k_gpio_chip {
  };
+ #endif
  
 +#ifdef CPTCFG_ATH9K_DEBUGFS
 +	/* RegMon hrtimer */
@@ -32,7 +32,7 @@
  struct ath_softc {
  	struct ieee80211_hw *hw;
  	struct device *dev;
-@@ -1021,6 +1039,21 @@ struct ath_softc {
+@@ -1034,6 +1052,21 @@ struct ath_softc {
  
  #ifdef CPTCFG_ATH9K_DEBUGFS
  	struct ath9k_debug debug;

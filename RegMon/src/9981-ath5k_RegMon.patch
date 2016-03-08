@@ -214,7 +214,7 @@
  	/* ready to process interrupts */
  	__clear_bit(ATH_STAT_INVALID, ah->status);
  
-@@ -2780,6 +2972,7 @@ int ath5k_start(struct ieee80211_hw *hw)
+@@ -2780,6 +2969,7 @@ int ath5k_start(struct ieee80211_hw *hw)
  		ah->bslot[i] = NULL;
  
  	ret = 0;
@@ -222,7 +222,7 @@
  done:
  	mmiowb();
  	mutex_unlock(&ah->lock);
-@@ -3129,6 +3322,7 @@ void
+@@ -3129,6 +3319,7 @@ void
  ath5k_deinit_ah(struct ath5k_hw *ah)
  {
  	struct ieee80211_hw *hw = ah->hw;
@@ -230,7 +230,7 @@
  
  	/*
  	 * NB: the order of these is important:
-@@ -3157,6 +3351,20 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
+@@ -3157,6 +3348,20 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
  	 */
  	ath5k_hw_deinit(ah);
  	free_irq(ah->irq, ah);
