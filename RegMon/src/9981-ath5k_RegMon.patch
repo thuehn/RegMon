@@ -246,7 +246,7 @@
 +
 +#ifdef CPTCFG_ATH5K_DEBUG
 +	/* RegMon stop */
-+	printk(KERN_ERR "[bluse] RegMon stop hrtimer \n");
++	printk(KERN_ERR "ath9k debug: RegMon stoped hrtimer \n");
 +	ah->shutdown = 1;
 +	//res = hrtimer_cancel(&ah->hrtm.timer);
 +	res = hrtimer_try_to_cancel(&ah->hrtm.timer);
