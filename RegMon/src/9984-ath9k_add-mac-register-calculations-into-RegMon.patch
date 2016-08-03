@@ -1,0 +1,28 @@
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -47,17 +47,20 @@ static ssize_t reg_log_read(struct file
+ 	while (sc->reg_last != sc->reg_current && count > 0) {
+ 		spin_unlock_bh(&sc->reg_lock);
+ 
+-		/* first entry host time, second wifi cards mac time */
+-		len = scnprintf(buf, sizeof(buf), "%.19lld %.8x%.8x",
++		/* 1st host time, 2nd delta hosttime, 3dr TSF, 4th delts TSF */
++		len = scnprintf(buf, sizeof(buf), "%.19lld %.8lld %.8x%.8x %.8d",
+ 				sc->reg_hosttime[sc->reg_last],
++				sc->reg_hosttime[sc->reg_last] - sc->reg_hosttime[sc->reg_last - 1],
+ 				(unsigned int) sc->reg_log[0][sc->reg_last],
+-				(unsigned int) sc->reg_log[1][sc->reg_last]);
++				(unsigned int) sc->reg_log[1][sc->reg_last],
++				(unsigned int) sc->reg_log[1][sc->reg_last] -
++				 (unsigned int) sc->reg_log[1][sc->reg_last - 1]);
+ 
+ 		/* print register values */
+ 		for (i = 2; i < MAX_REG_COUNT; i++) {
+ 			len += scnprintf(buf + len, sizeof(buf) - len,
+-					 " %.8x", (unsigned int)
+-					 sc->reg_log[i][sc->reg_last]);
++					 " %.8d", (unsigned int)
++					 sc->reg_log[i][sc->reg_last] - sc->reg_log[i][sc->reg_last - 1]);
+ 		}
+ 
+ 		/* add line wrap */
