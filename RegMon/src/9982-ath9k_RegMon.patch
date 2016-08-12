@@ -306,7 +306,7 @@
  
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -98,9 +98,18 @@ void ath_ps_full_sleep(unsigned long dat
+@@ -98,9 +98,17 @@ void ath_ps_full_sleep(unsigned long dat
  	struct ath_softc *sc = (struct ath_softc *) data;
  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
  	bool reset;
@@ -320,12 +320,11 @@
 +	/* RegMon cancel in case of full sleep */
 +	sc->shutdown = 1;
 +	res = hrtimer_try_to_cancel(&sc->hrtm.timer);
-+	printk(KERN_ERR "ath9k debug: regmon canceled hrtimer in ath_ps_full_sleep \n");
 +#endif
  	spin_unlock(&common->cc_lock);
  
  	ath9k_hw_setrxabort(sc->sc_ah, 1);
-@@ -211,6 +220,14 @@ static bool ath_prepare_reset(struct ath
+@@ -211,6 +219,13 @@ static bool ath_prepare_reset(struct ath
  {
  	struct ath_hw *ah = sc->sc_ah;
  	bool ret = true;
@@ -335,12 +334,11 @@
 +	/* RegMon cancel in case of hw reset */
 +	sc->shutdown = 1;
 +	res = hrtimer_try_to_cancel(&sc->hrtm.timer);
-+	printk(KERN_ERR "ath9k debug: regmon canceled hrtimer in ath_prepare_reset\n");
 +#endif
  
  	ieee80211_stop_queues(sc->hw);
  	ath_stop_ani(sc);
-@@ -274,6 +291,15 @@ static bool ath_complete_reset(struct at
+@@ -274,6 +289,14 @@ static bool ath_complete_reset(struct at
  	ieee80211_wake_queues(sc->hw);
  	ath9k_p2p_ps_timer(sc);
  
@@ -350,20 +348,18 @@
 +	hrtimer_start(&sc->hrtm.timer,
 +		      ktime_set(0, sc->reg_interval),
 +		      HRTIMER_MODE_REL);
-+	printk(KERN_ERR "ath9k debug: RegMon hrtimer started in ath_complete_reset().\n");
 +#endif
 +
  	return true;
  }
  
-@@ -743,6 +769,17 @@ static int ath9k_start(struct ieee80211_
+@@ -743,6 +766,16 @@ static int ath9k_start(struct ieee80211_
  
  	ath9k_rng_start(sc);
  
 +#ifdef CPTCFG_ATH9K_DEBUGFS
 +	/* RegMon start hrtimer based register readings */
 +	/* wait a certain delay, its needed for proper start */
-+	//usleep_range(10000000,20000000);
 +	sc->shutdown = 0;
 +	hrtimer_start(&sc->hrtm.timer,
 +		      ktime_set(0, sc->reg_interval),
@@ -374,7 +370,7 @@
  	return 0;
  }
  
-@@ -829,6 +866,14 @@ static void ath9k_stop(struct ieee80211_
+@@ -829,6 +862,14 @@ static void ath9k_stop(struct ieee80211_
  	struct ath_hw *ah = sc->sc_ah;
  	struct ath_common *common = ath9k_hw_common(ah);
  	bool prev_idle;
