@@ -1,0 +1,34 @@
+#!/bin/sh /etc/rc.common
+START=81
+
+# TODO: luci_statistics starts at 79 and collectd at 80
+# TODO: get sample rate from uci
+
+start() {
+    
+        /etc/init.d/collectd stop
+
+        regmon_path=`uci get regmon.regmon.regmonpath`
+        sampling_rate=`uci get regmon.regmon.samplingrate`
+        echo ${sampling_rate} > ${regmon_path}/sampling_interval
+    
+        if [ -e /etc/collectd.conf ]; then
+            ### create config
+            /usr/bin/regmon-genconfig >> /etc/collectd.conf
+
+            ### workaround broken permissions on /tmp
+            chmod 1777 /tmp
+        else
+            echo "Error: luci-app-statistics not started" >&2
+            exit 1
+        fi
+
+        /etc/init.d/collectd start
+}
+
+restart() {
+
+        ### apply config changes from luci_statistics, regenerate collectd.conf
+        /etc/init.d/luci_statistics restart
+        start
+}

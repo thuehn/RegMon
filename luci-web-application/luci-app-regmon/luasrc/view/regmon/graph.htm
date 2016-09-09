@@ -1,0 +1,34 @@
+
+<%+header%>
+
+<% if ( error_msg ~= "" ) then %>
+    <p>error: <%=error_msg %></p>
+<% end %>
+
+<h2 name="content"><%:Regmon Graph%></h2>
+
+
+<form action="" method="get">
+    <% if metrics ~= nil then %>
+       	<select name="timespan">
+            <% if timespans ~= nil then %>
+      		<% for i, span in ipairs ( timespans ) do %>
+       			<option<% if span == current_timespan then %> selected="selected"<% end %>><%=span%></option>
+       		<% end %>
+          <% end %>
+       	</select>
+    <% end %>
+	<input class="cbi-button cbi-button-apply" type="submit" name="submit" value="<%:Refresh »%>" />
+</form>
+
+<br />
+<hr />
+<br />
+
+<div style="text-align: center">
+<img src="<%=REQUEST_URI%>?img=regmon.png&timespan=<%=current_timespan%>" />
+</div>
+
+<script language="javascript" type="text/javascript">XHR.poll()</script>
+
+<%+footer%>
