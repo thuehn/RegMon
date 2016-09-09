@@ -70,23 +70,23 @@
 +	size_t len, n, ret;
 +	size_t sum = 0;
 +	u8 i;
-+	loff_t pos;
++	loff_t pos; s64 time; u32 utime;
 +
 +	spin_lock_bh(&sc->reg_lock);
 +
 +	while (sc->reg_last != sc->reg_current && count > 0) {
 +		spin_unlock_bh(&sc->reg_lock);
 +
-+		/* first entry host time, second wifi cards mac time */
-+		len = scnprintf(buf, sizeof(buf), "%.19lld %.8x%.8x",
-+				sc->reg_hosttime[sc->reg_last],
++		/* first entry host time, second wifi cards mac time */ time = sc->reg_hosttime[sc->reg_last]; utime = __div64_32(&time,1000000000);
++		len = scnprintf(buf, sizeof(buf), "%.10lld,%.10d,0x%x%.8x",
++				time, utime,
 +				(unsigned int) sc->reg_log[0][sc->reg_last],
 +				(unsigned int) sc->reg_log[1][sc->reg_last]);
 +
 +		/* print register values */
 +		for (i = 2; i < MAX_REG_COUNT; i++) {
 +			len += scnprintf(buf + len, sizeof(buf) - len,
-+					 " %.8x", (unsigned int)
++					 ",0x%.8x", (unsigned int)
 +					 sc->reg_log[i][sc->reg_last]);
 +		}
 +
