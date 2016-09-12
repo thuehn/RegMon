@@ -93,14 +93,24 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
 --    local file_prefix = "gauge"
     local file_prefix = "derive"
 
+    local span_seconds = luci.util.parse_units( span )
+
     local cmd = "rrdtool graph "
     cmd = cmd .. image 
 
-    cmd = cmd .. " --end now" .. " --start end-" .. luci.util.parse_units( span ) .. "s"
+    cmd = cmd .. " --end now" .. " --start end-" .. span_seconds .. "s"
     cmd = cmd .. " --upper-limit 102 --lower-limit 0 --rigid"
     cmd = cmd .. " --vertical-label Percent"
     cmd = cmd .. " --width " .. width
     cmd = cmd .. " --height " .. height .. " \\\n"
+
+    if (span_seconds <= 60) then
+        cmd = cmd .. " --x-grid SECOND:2:MINUTE:1:SECOND:10:0:\%X"
+    elseif (span_seconds <= 300) then
+        cmd = cmd .. " --x-grid SECOND:10:MINUTE:1:SECOND:30:0:\%X"
+    elseif (span_seconds <= 1800) then
+        cmd = cmd .. " --x-grid MINUTE:5:SECOND:30:MINUTE:5:0:\%X"
+    end
 
     local colors = { "#FF5555", "#55FF55", "#5555FF", "#FF55FF", "#55FFFF", "#FFFF55" }
     local colors2 = { "#AA0000", "#00AA00", "#0000AA", "#AA00AA", "#00AAAA", "#AAAA00" }
