@@ -1,4 +1,3 @@
-
 <%+header%>
 
 <% if ( error_msg ~= "" ) then %>
@@ -26,9 +25,17 @@
 <br />
 
 <div style="text-align: center">
-<img src="<%=REQUEST_URI%>?img=regmon.png&timespan=<%=current_timespan%>" />
+<img src="<%=REQUEST_URI%>?img=regmon.png&timespan=<%=current_timespan%>" id="regmonimg" />
 </div>
 
-<script language="javascript" type="text/javascript">XHR.poll()</script>
+<% local path = luci.dispatcher.build_url ( "admin", "statistics", "regmon", "graph" ) %>
+
+<script language="javascript" type="text/javascript">
+    function refresh(x) {
+        var img = document.getElementById('regmonimg');
+        img.src  = "<%=REQUEST_URI%>?img=regmon.png&timespan=<%=current_timespan%>&" + new Date().getTime();
+    }
+    XHR.poll (5, '<%=path%>?timespan=<%=current_timespan%>&submit=Refresh+»', null, function (xhr, json) { refresh(xhr) })
+</script>
 
 <%+footer%>
