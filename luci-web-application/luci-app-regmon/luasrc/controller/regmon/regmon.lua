@@ -1,6 +1,7 @@
 module("luci.controller.regmon.regmon", package.seeall)
 
 require ("lfs")
+-- require("luci.i18n")
 
 -- Routing and menu index for the luci dispatcher.
 function index()
@@ -97,6 +98,7 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
 
     cmd = cmd .. " --end now" .. " --start end-" .. luci.util.parse_units( span ) .. "s"
     cmd = cmd .. " --upper-limit 102 --lower-limit 0 --rigid"
+    cmd = cmd .. " --vertical-label Percent"
     cmd = cmd .. " --width " .. width
     cmd = cmd .. " --height " .. height .. " \\\n"
 
