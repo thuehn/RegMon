@@ -18,9 +18,12 @@ Update your feeds:
 
 `./scripts/feeds update`
 
-Install luci and regmon feeds:
+Install luci, luafilesystem and regmon feeds:
 
-`./scripts/feeds install -a -p luci` and
+`./scripts/feeds install -a -p luci`
+
+`./scripts/feeds install -p -a luafilesystem`
+
 `./scripts/feeds install -p -a regmon`
 
 Select the following packages in your menuconfig:
