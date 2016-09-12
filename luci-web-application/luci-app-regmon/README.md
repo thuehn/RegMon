@@ -6,7 +6,7 @@ Checkout Lede sources:
 
 `git clone https://git.lede-project.org/source.git`
 
-Install the RegMon patches [see RegMon/README.md](https://github.com/thuehn/RegMon])
+Install the RegMon patches \(see [RegMon/README.md](https://github.com/thuehn/RegMon)\)
 
 Enable LuCI feed in your feeds.conf.
 
