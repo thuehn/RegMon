@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# register commit handler
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@luci_regmon[-1]
+	add ucitrack luci_regmon
+	set ucitrack.@luci_regmon[-1].init=luci-app-regmon
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0

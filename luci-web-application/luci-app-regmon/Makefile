@@ -38,6 +38,7 @@ define Package/luci-app-regmon/install
 		$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/regmon
 		$(INSTALL_DIR) $(1)/etc/init.d
 		$(INSTALL_DIR) $(1)/etc/config
+		$(INSTALL_DIR) $(1)/etc/uci-defaults
 		$(INSTALL_DIR) $(1)/usr/bin
 		$(INSTALL_BIN) ./root/etc/init.d/luci-app-regmon $(1)/etc/init.d/luci-app-regmon
 		$(INSTALL_DATA) ./root/etc/config/regmon $(1)/etc/config/regmon
@@ -45,6 +46,8 @@ define Package/luci-app-regmon/install
 		$(INSTALL_DATA) ./luasrc/model/cbi/regmon/regmon_cbi.lua $(1)/usr/lib/lua/luci/model/cbi/regmon/regmon_cbi.lua
 		$(INSTALL_DATA) ./luasrc/view/regmon/graph.htm $(1)/usr/lib/lua/luci/view/regmon/graph.htm
 		$(INSTALL_DATA) ./luasrc/controller/regmon/regmon.lua $(1)/usr/lib/lua/luci/controller/regmon/regmon.lua
+		$(INSTALL_DATA) ./root/etc/uci-defaults/40_luci-regmon $(1)/etc/uci-defaults/40_luci-regmon
+		$(INSTALL_DATA) ./root/etc/config/ucitrack $(1)/etc/config/ucitrack
 
 endef
 

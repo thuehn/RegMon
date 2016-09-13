@@ -1,9 +1,6 @@
 #!/bin/sh /etc/rc.common
 START=81
 
-# TODO: luci_statistics starts at 79 and collectd at 80
-# TODO: get sample rate from uci
-
 start() {
     
         /etc/init.d/collectd stop
