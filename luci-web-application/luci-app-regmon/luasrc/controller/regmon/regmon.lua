@@ -123,7 +123,9 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
         cmd = cmd .. rrd_metric_defs ( metric, rrd_path, file_prefix, rrd_suffix, column_name )
     end
 
-    cmd = cmd .. " \"CDEF:rel_other=rel_" .. busy_metric
+    -- add def for noise metrics than the explicit monitored one
+    -- i.e. "noise = busy - rx - tx"
+    cmd = cmd .. " \"CDEF:rel_noise=rel_" .. busy_metric
     for i, metric in ipairs ( metrics ) do
         if ( metric ~= busy_metric ) then
             cmd = cmd .. ",rel_" .. metric .. ",-"
@@ -131,26 +133,33 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
     end
     cmd = cmd .. "\" \\\n"
 
-    cmd = cmd .. " \"CDEF:sum=rel_other"
-    for i, metric in ipairs ( metrics ) do
-        cmd = cmd .. ",rel_" .. metric .. ",+"
-    end
-    cmd = cmd .. "\" \\\n"
+    -- calculate idle = (abs_count - busy_count) * 100 / abs_count
+    cmd = cmd .. " \"CDEF:rel_idle=abs_count," .. busy_metric .. ",-,100,*,abs_count,/\" \\\n"
 
-    cmd = cmd .. " \"CDEF:rel_idle=100,sum,-\" \\\n"
+--    -- calculate noise metric i.e. "idle = 100 - (rx + tx + busy)" 
+--    cmd = cmd .. " \"CDEF:sum=rel_noise"
+--    for i, metric in ipairs ( metrics ) do
+--        cmd = cmd .. ",rel_" .. metric .. ",+"
+--    end
+--    cmd = cmd .. "\" \\\n"
+
+--    -- calculate and normalize idle
+--    cmd = cmd .. " \"CDEF:rel_idle=sum,100,GT,0,100,sum,-,IF\" \\\n"
 
     local out_shape = shape
     -- print shapes and legends for each metric
     for i, metric in ipairs ( metrics ) do
-        if ( stacked == '1' and i > 1 ) then
+        if ( metric ~= busy_metric ) then
+            if ( stacked == '1' and i > 1 ) then
                 out_shape = "STACK"
+            end
+            cmd = cmd .. rrd_metric_shape ( metric, stacked, out_shape, colors[i] )
+            cmd = cmd .. rrd_metric_legend ( metric )
         end
-        cmd = cmd .. rrd_metric_shape ( metric, stacked, out_shape, colors[i] )
-        cmd = cmd .. rrd_metric_legend ( metric )
     end
 
-    cmd = cmd .. " " .. out_shape .. ":rel_other" .. colors[#metrics+1] .. ":other"
-    cmd = cmd .. rrd_metric_legend ( "other" )
+    cmd = cmd .. " " .. out_shape .. ":rel_noise" .. colors[#metrics+1] .. ":noise"
+    cmd = cmd .. rrd_metric_legend ( "noise" )
 
     cmd = cmd .. " " .. out_shape .. ":rel_idle" .. colors[#metrics+2] .. ":idle"
     cmd = cmd .. rrd_metric_legend ( "idle" )
@@ -158,15 +167,17 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
     -- print highlight for each metric
     out_shape = "LINE2"
     for i, metric in ipairs ( metrics ) do
-        if ( stacked == '1' and i > 1 ) then
-            out_shape = "STACK"
-        end
-        if ( shape == 'AREA' ) then
-            cmd = cmd .. " " .. out_shape .. ":" .. "rel_" .. metric .. colors2[i] .. " \\\n"
+        if ( metric ~= busy_metric ) then
+            if ( stacked == '1' and i > 1 ) then
+                out_shape = "STACK"
+            end
+            if ( shape == 'AREA' ) then
+                cmd = cmd .. " " .. out_shape .. ":" .. "rel_" .. metric .. colors2[i] .. " \\\n"
+            end
         end
     end
     if ( stacked == '1' ) then
-        cmd = cmd .. " " .. out_shape .. ":rel_other" .. colors2[#metrics+1] .. " \\\n"
+        cmd = cmd .. " " .. out_shape .. ":rel_noise" .. colors2[#metrics+1] .. " \\\n"
     end
 
     -- execute rrdtool
