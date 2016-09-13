@@ -35,7 +35,7 @@
         var img = document.getElementById('regmonimg');
         img.src  = "<%=REQUEST_URI%>?img=regmon.png&timespan=<%=current_timespan%>&" + new Date().getTime();
     }
-    XHR.poll (5, '<%=path%>?timespan=<%=current_timespan%>&submit=Refresh+»', null, function (xhr, json) { refresh(xhr) })
+    XHR.poll (30, '<%=path%>?timespan=<%=current_timespan%>&submit=Refresh+»', null, function (xhr, json) { refresh(xhr) })
 </script>
 
 <%+footer%>
