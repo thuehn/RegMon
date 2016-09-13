@@ -1,9 +1,5 @@
 <%+header%>
 
-<% if ( error_msg ~= "" ) then %>
-    <p>error: <%=error_msg %></p>
-<% end %>
-
 <h2 name="content"><%:Regmon Graph%></h2>
 
 
@@ -17,6 +13,7 @@
           <% end %>
        	</select>
     <% end %>
+    <input type="hidden" name="phys" value="<%=phys%>">
 	<input class="cbi-button cbi-button-apply" type="submit" name="submit" value="<%:Refresh »%>" />
 </form>
 
@@ -24,12 +21,15 @@
 <hr />
 <br />
 
-<% local phys_list = luci.util.split( phys, "%s+", nil, true ) %>
+span <%=current_timespan%>
+
+<% local phys_list = luci.util.split( phys, "+", nil, true ) %>
 <% local path = luci.dispatcher.build_url ( "admin", "statistics", "regmon", "graph" ) %>
 
 <% for i, phy in ipairs ( phys_list ) do %>
+    <h3>Device <%=phy%></h3>
     <div style="text-align: center">
-       <img src="<%=REQUEST_URI%>?img=<%=phy%>&timespan=<%=current_timespan%>" id="regmonimg<%=phy%>" />
+       <img src="<%=REQUEST_URI%>?timespan=<%=current_timespan%>&phys=<%=phys%>&img=<%=phy%>" id="regmonimg<%=phy%>" />
     </div>
 <% end %>
 
@@ -37,10 +37,10 @@
     function refresh(x) {
         <% for i, phy in ipairs ( phys_list ) do %>
             var img = document.getElementById('regmonimg<%=phy%>');
-            img.src  = "<%=REQUEST_URI%>?img=<%=phy%>&timespan=<%=current_timespan%>&" + new Date().getTime();
+            img.src  = "<%=REQUEST_URI%>?timespan=<%=current_timespan%>&phys=<%=phys%>&img=<%=phy%>&" + new Date().getTime();
         <% end %>
     }
-    XHR.poll (30, '<%=path%>?phys=<%=phys%>&timespan=<%=current_timespan%>&submit=Refresh+»', null, function (xhr, json) { refresh(xhr) })
+//    XHR.poll (30, '<%=path%>?timespan=<%=current_timespan%>&phys=<%=phys%>', null, function (xhr, json) { refresh(xhr) })
 </script>
 
 <%+footer%>
