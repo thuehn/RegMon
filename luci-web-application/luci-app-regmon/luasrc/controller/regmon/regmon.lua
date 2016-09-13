@@ -103,7 +103,7 @@ function generate_rrdimage ( phy, image, span, width, height, rrd_path,
 
     cmd = cmd .. " --end now" .. " --start end-" .. span_seconds .. "s"
     cmd = cmd .. " --upper-limit 102 --lower-limit 0 --rigid"
-    cmd = cmd .. " --vertical-label Percent"
+    cmd = cmd .. " --vertical-label \"relative dwell time [%]\""
     cmd = cmd .. " --width " .. width
     cmd = cmd .. " --height " .. height .. " \\\n"
 
@@ -148,6 +148,8 @@ function generate_rrdimage ( phy, image, span, width, height, rrd_path,
     cmd = cmd .. " \"CDEF:rel_idle" .. phy .. "_norm=rel_noise" .. phy 
         .. ",0,LT,rel_idle" .. phy .. ",rel_noise" .. phy .. ",+,rel_idle" .. phy .. ",IF\" \\\n"
 
+    
+    cmd = cmd .. " COMMENT:\"relative mac states\\n\" \\\n"
     local out_shape = shape
     -- print shapes and legends for each metric
     for i, metric in ipairs ( metrics ) do
@@ -186,8 +188,8 @@ function generate_rrdimage ( phy, image, span, width, height, rrd_path,
     local rrdtool = io.popen( cmd )
     rrdtool:close()
 
-    -- write command for debug
-    nixio.fs.writefile("/tmp/rrdcmd" .. phy .. ".txt", cmd .. "\n" )
+--    -- write command for debug
+--    nixio.fs.writefile("/tmp/rrdcmd" .. phy .. ".txt", cmd .. "\n" )
 end
 
 -- Controlling for the graph page.
