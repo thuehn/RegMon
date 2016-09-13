@@ -1,6 +1,5 @@
 config luci_statistics
-    list affects regmon
+    list affects 'regmon'
 
 config regmon
-    option init luci-app-regmon
-    list affects collectd
+    option init 'luci-app-regmon'
