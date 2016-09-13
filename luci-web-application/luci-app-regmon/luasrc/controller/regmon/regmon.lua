@@ -35,9 +35,9 @@ end
 -- Returns a legend declaration for a metric
 function rrd_metric_legend ( metric ) 
     local var = "rel_" .. metric
-    return " \"GPRINT:" .. var .. ":MIN:\t\tMin\\: %8.2lf %s\" \\\n"
-             .. " \"GPRINT:" .. var .. ":AVERAGE:\tAvg\\: %8.2lf %s\" \\\n"
-             .. " \"GPRINT:" .. var .. ":MAX:\tMax\\: %8.2lf %s\\n\" \\\n"
+    return " \"GPRINT:" .. var .. ":MIN:\t\tMin\\: %8.2lf%s %%\" \\\n"
+             .. " \"GPRINT:" .. var .. ":AVERAGE:\tAvg\\: %8.2lf%s %%\" \\\n"
+             .. " \"GPRINT:" .. var .. ":MAX:\tMax\\: %8.2lf%s %%\\n\" \\\n"
 end
 
 
@@ -104,6 +104,7 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
     cmd = cmd .. " --width " .. width
     cmd = cmd .. " --height " .. height .. " \\\n"
 
+    -- add a dense grid when timespan becomes small
     if (span_seconds <= 60) then
         cmd = cmd .. " --x-grid SECOND:2:MINUTE:1:SECOND:10:0:\%X"
     elseif (span_seconds <= 300) then
@@ -180,8 +181,8 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
     local rrdtool = io.popen( cmd )
     rrdtool:close()
 
-    -- write command for debug
-    nixio.fs.writefile("/tmp/rrdcmd.txt", cmd .. "\n" )
+--    -- write command for debug
+--    nixio.fs.writefile("/tmp/rrdcmd.txt", cmd .. "\n" )
 end
 
 
