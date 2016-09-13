@@ -221,11 +221,15 @@ function regmon_render()
         local tailcsv_dir = "tail_csv-regmon" .. (index-1)
         
         if ( index ~= 1) then
-            phys = phys .. "+"
+            phys = phys .. " "
         end
         phys = phys .. index-1
 
-        if ( vars.img == nil or vars.img == index-1 ) then
+--        TODO: don't render all images on each call
+--        fixme: vars.img == nil or vars.img == index-1 
+--               and the image will be overwritten by 
+--               a default one, i.e. 1day timespan
+--        if ( vars.img == nil or vars.img == index-1 ) then
             generate_rrdimage ( index-1
                               , rrdimg_dir .. "/" .. rrdimg
                               , span
@@ -237,7 +241,7 @@ function regmon_render()
                               , stacked
                               , busy_metric
                               )
-        end
+--        end
     end
 
     -- deliver the image
