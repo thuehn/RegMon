@@ -57,7 +57,7 @@ All entries for Regmon depends on Regmons debugfs settings heayily. With the def
 
 Regmon path:
 
-The regmon path option holds the path to regmons debugfs directory. Default regmon path is "/sys/kernel/debug/ieee80211/phy0/regmon".
+The regmon path list option holds one or multiple paths to regmons debugfs directory. Default regmon path is "/sys/kernel/debug/ieee80211/phy0/regmon". You can add another path to another physical device if you have more than one.
 
 Sampling rate:
 
