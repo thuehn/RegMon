@@ -18,13 +18,13 @@ Update your feeds:
 
 `./scripts/feeds update`
 
-Install luci, luafilesystem and regmon feeds:
+Install luci, luafilesystem and regmon packages:
 
 `./scripts/feeds install -a -p luci`
 
 `./scripts/feeds install -p -a luafilesystem`
 
-`./scripts/feeds install -p -a regmon`
+`./scripts/feeds install -p -a luci-app-regmon`
 
 Select the following packages in your menuconfig:
 
@@ -44,7 +44,7 @@ All further configuration options reside at regmons configuration page under "St
 
 ####Regmon entries####
 
-All entries for Regmon depends heavily on Regmons debugfs settings. With the default configuration the Regmon will output the following comma seperated registers:
+All entries for Regmon depends on Regmons debugfs settings heayily. With the default configuration the Regmon will output the following comma seperated registers:
 
 - kernel timestamp in milli seconds as a decimal number
 - remaining kernel timestamp in nano seconds from last milli second as a decimal number
