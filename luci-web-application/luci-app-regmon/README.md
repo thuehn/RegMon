@@ -85,7 +85,7 @@ With this option you can modify the list of all names of the counter fields incl
 
 ####Collectd entries####
 
-In this section you can set the collection interval of collectd in seconds and flag whether the collectd should create a log file for debugging.
+In this section you can set the collection interval of collectd in seconds and flag whether the collectd should create a log file for debugging. This option needs the package "collectd-mod-logfile" installed.
 
 ####RRDtool entries####
 
