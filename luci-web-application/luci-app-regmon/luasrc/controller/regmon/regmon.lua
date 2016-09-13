@@ -19,7 +19,7 @@ function index()
     local vars = luci.http.formvalue(nil, true)
 	local span = vars.timespan or nil
 	entry({"admin", "statistics", "regmon", "graph" }, 
-        call("regmon_render"), "Graph", 3).query = { timespan = span, phys = "0 1" }
+        call("regmon_render"), "Graph", 3).query = { timespan = span }
 end
 
 
