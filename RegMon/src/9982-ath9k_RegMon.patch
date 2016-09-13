@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath9k/ath9k.h
 +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -30,6 +30,16 @@
+@@ -31,6 +31,16 @@
  #include "mci.h"
  #include "dfs.h"
  
@@ -17,9 +17,9 @@
  struct ath_node;
  struct ath_vif;
  
-@@ -952,6 +962,14 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
- 
- #define ATH9K_NUM_CHANCTX  2 /* supports 2 operating channels */
+@@ -982,6 +992,14 @@ struct ath9k_gpio_chip {
+ };
+ #endif
  
 +#ifdef CPTCFG_ATH9K_DEBUGFS
 +	/* RegMon hrtimer */
@@ -32,9 +32,9 @@
  struct ath_softc {
  	struct ieee80211_hw *hw;
  	struct device *dev;
-@@ -1011,6 +1029,21 @@ struct ath_softc {
+@@ -1044,6 +1062,21 @@ struct ath_softc {
  
- #ifdef CONFIG_ATH9K_DEBUGFS
+ #ifdef CPTCFG_ATH9K_DEBUGFS
  	struct ath9k_debug debug;
 +
 +	/* RegMon */
@@ -71,8 +71,8 @@
 +	size_t sum = 0;
 +	u8 i;
 +	loff_t pos;
-+    s64 time_in_ms;
-+    u32 time_rem_in_ns;
++	s64 time_in_ms;
++	u32 time_rem_in_ns;
 +
 +	spin_lock_bh(&sc->reg_lock);
 +
@@ -80,8 +80,8 @@
 +		spin_unlock_bh(&sc->reg_lock);
 +
 +		/* first entry host time, second wifi cards mac time */
-+        time_in_ms = sc->reg_hosttime[sc->reg_last]; 
-+        time_rem_in_ns = __div64_32(&time_in_ms,1000000000);
++		time_in_ms = sc->reg_hosttime[sc->reg_last];
++		time_rem_in_ns = do_div(time_in_ms, 1000000000);
 +		len = scnprintf(buf, sizeof(buf), "%.10lld,%.10d,0x%x%.8x",
 +				time_in_ms, time_rem_in_ns,
 +				(unsigned int) sc->reg_log[0][sc->reg_last],
@@ -217,7 +217,7 @@
  static char *dev_info = "ath9k";
  
  MODULE_AUTHOR("Atheros Communications");
-@@ -913,6 +1067,12 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+@@ -929,6 +1083,12 @@ int ath9k_init_device(u16 devid, struct
  	struct ath_hw *ah;
  	int error = 0;
  	struct ath_regulatory *reg;
@@ -230,7 +230,7 @@
  
  	/* Bring up device */
  	error = ath9k_init_softc(devid, sc, bus_ops);
-@@ -961,6 +1121,45 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+@@ -979,6 +1139,45 @@ int ath9k_init_device(u16 devid, struct
  		goto unregister;
  	}
  
@@ -276,7 +276,7 @@
  	/* Handle world regulatory */
  	if (!ath_is_world_regd(reg)) {
  		error = regulatory_hint(hw->wiphy, reg->alpha2);
-@@ -991,6 +1190,9 @@ deinit:
+@@ -1010,6 +1209,9 @@ deinit:
  static void ath9k_deinit_softc(struct ath_softc *sc)
  {
  	int i = 0;
@@ -286,7 +286,7 @@
  
  	ath9k_deinit_p2p(sc);
  	ath9k_deinit_btcoex(sc);
-@@ -1004,6 +1206,21 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+@@ -1023,6 +1225,21 @@ static void ath9k_deinit_softc(struct at
  	if (sc->dfs_detector != NULL)
  		sc->dfs_detector->exit(sc->dfs_detector);
  
@@ -310,7 +310,7 @@
  
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -98,9 +98,17 @@ void ath_ps_full_sleep(unsigned long data)
+@@ -98,9 +98,17 @@ void ath_ps_full_sleep(unsigned long dat
  	struct ath_softc *sc = (struct ath_softc *) data;
  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
  	bool reset;
@@ -328,7 +328,7 @@
  	spin_unlock(&common->cc_lock);
  
  	ath9k_hw_setrxabort(sc->sc_ah, 1);
-@@ -211,6 +219,13 @@ static bool ath_prepare_reset(struct ath_softc *sc)
+@@ -211,6 +219,13 @@ static bool ath_prepare_reset(struct ath
  {
  	struct ath_hw *ah = sc->sc_ah;
  	bool ret = true;
@@ -342,7 +342,7 @@
  
  	ieee80211_stop_queues(sc->hw);
  	ath_stop_ani(sc);
-@@ -274,6 +289,14 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+@@ -274,6 +289,14 @@ static bool ath_complete_reset(struct at
  	ieee80211_wake_queues(sc->hw);
  	ath9k_p2p_ps_timer(sc);
  
@@ -357,7 +357,7 @@
  	return true;
  }
  
-@@ -738,6 +761,16 @@ static int ath9k_start(struct ieee80211_hw *hw)
+@@ -743,6 +766,16 @@ static int ath9k_start(struct ieee80211_
  
  	ath9k_rng_start(sc);
  
@@ -374,7 +374,7 @@
  	return 0;
  }
  
-@@ -824,6 +857,14 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+@@ -829,6 +862,14 @@ static void ath9k_stop(struct ieee80211_
  	struct ath_hw *ah = sc->sc_ah;
  	struct ath_common *common = ath9k_hw_common(ah);
  	bool prev_idle;
