@@ -4,9 +4,9 @@ m = Map("regmon", translate("Regmon Config"), translate("Set options for Regmon"
 c = m:section(TypedSection, "regmon", translate("regmon entries"))
 c.anonymous = true
 
-register_log = c:option(Value, "regmonpath", translate("Regmon path")) 
-register_log.optional = false
-register_log.rmempty = false
+regmon_path = c:option(DynamicList, "regmonpath", translate("Regmon path")) 
+regmon_path.optional = false
+regmon_path.rmempty = false
 
 sampling_rate = c:option(Value, "samplingrate", translate("Sampling rate")) 
 sampling_rate.optional = false

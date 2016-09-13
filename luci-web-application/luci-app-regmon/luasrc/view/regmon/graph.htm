@@ -24,18 +24,23 @@
 <hr />
 <br />
 
-<div style="text-align: center">
-<img src="<%=REQUEST_URI%>?img=regmon.png&timespan=<%=current_timespan%>" id="regmonimg" />
-</div>
-
+<% local phys_list = luci.util.split( phys, "%s+", nil, true ) %>
 <% local path = luci.dispatcher.build_url ( "admin", "statistics", "regmon", "graph" ) %>
+
+<% for i, phy in ipairs ( phys_list ) do %>
+    <div style="text-align: center">
+       <img src="<%=REQUEST_URI%>?img=<%=phy%>&timespan=<%=current_timespan%>" id="regmonimg<%=phy%>" />
+    </div>
+<% end %>
 
 <script language="javascript" type="text/javascript">
     function refresh(x) {
-        var img = document.getElementById('regmonimg');
-        img.src  = "<%=REQUEST_URI%>?img=regmon.png&timespan=<%=current_timespan%>&" + new Date().getTime();
+        <% for i, phy in ipairs ( phys_list ) do %>
+            var img = document.getElementById('regmonimg<%=phy%>');
+            img.src  = "<%=REQUEST_URI%>?img=<%=phy%>&timespan=<%=current_timespan%>&" + new Date().getTime();
+        <% end %>
     }
-    XHR.poll (30, '<%=path%>?timespan=<%=current_timespan%>&submit=Refresh+»', null, function (xhr, json) { refresh(xhr) })
+    XHR.poll (30, '<%=path%>?phys=<%=phys%>&timespan=<%=current_timespan%>&submit=Refresh+»', null, function (xhr, json) { refresh(xhr) })
 </script>
 
 <%+footer%>

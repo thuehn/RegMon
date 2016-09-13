@@ -19,14 +19,14 @@ function index()
     local vars = luci.http.formvalue(nil, true)
 	local span = vars.timespan or nil
 	entry({"admin", "statistics", "regmon", "graph" }, 
-        call("regmon_render"), "Graph", 3).query = { timespan = span }
+        call("regmon_render"), "Graph", 3).query = { timespan = span, phys = "0 1" }
 end
 
 
 -- Returns a rrd DEF declaration for a metric
-function rrd_metric_def ( metric, rrd_path, file_prefix, rrd_suffix, column_name )
-    local cmd = " \"DEF:" .. metric .. "=" 
-              .. rrd_path .. "/" .. file_prefix .. "-" .. metric .. rrd_suffix
+function rrd_metric_def ( index, metric, rrd_path, file_prefix, rrd_suffix, column_name )
+    local cmd = " \"DEF:" .. metric .. index .. "=" 
+              .. rrd_path .. "/" .. file_prefix .. "-" .. metric .. index .. rrd_suffix
               .. ":" .. column_name ..":AVERAGE\" \\\n"
     return cmd
 end
@@ -43,6 +43,7 @@ end
 
 -- Returns rrd command line parts for a metric.
 --
+-- index: phy number
 -- metric: name of the metric
 -- rrd_path: path to rrd databases
 -- file_prefix: prefix of the rrd file (mostly the type, i.e. gauge, derive)
@@ -50,32 +51,33 @@ end
 -- column_name: name of the rrd column
 -- stacked: whether the shape should be declared stacked
 -- color: main color of the shape
-function rrd_metric_defs ( metric, rrd_path, file_prefix, rrd_suffix, column_name )
+function rrd_metric_defs ( index, metric, rrd_path, file_prefix, rrd_suffix, column_name )
 
     -- declare metric
-    local cmd = rrd_metric_def ( metric, rrd_path, file_prefix, rrd_suffix, column_name)
+    local cmd = rrd_metric_def ( index, metric, rrd_path, file_prefix, rrd_suffix, column_name)
 
 --    -- absolute values, use with 'GAUGE' rrd
 --    cmd = cmd .. " \"CDEF:rel_" .. metric .. "=" .. "abs_count" .. "," .. metric .. ",/\" \\\n"
 
 --    -- percentage output, use with 'DERIVE' rrd
-    cmd = cmd .. " \"CDEF:rel_" .. metric .. "=" .. metric .. ",100,*,abs_count,/\" \\\n"
+    cmd = cmd .. " \"CDEF:rel_" .. metric .. index .. "=" .. metric .. index .. ",100,*,abs_count" .. index .. ",/\" \\\n"
 
     return cmd
 end
 
 
-function rrd_metric_shape ( metric, stacked, shape, color )
-    local var = "rel_" .. metric
+function rrd_metric_shape ( index, metric, stacked, shape, color )
+    local var = "rel_" .. metric .. index
     local cmd = " " .. shape .. ":"
         .. var
-        .. color .. ":" .. metric .. " \\\n"
+        .. color .. ":" .. metric .. index .. " \\\n"
     return cmd
 end
 
 
 -- Creates rrd shell command and executes it.
 --
+-- index: number of the mac phy
 -- image: path of the resulting image file
 -- span: timespan as 1hour, 1day, ...
 -- width: resulting image width
@@ -85,7 +87,7 @@ end
 --          pattern "gauge-[metric].rrd" or derive-[metric].rrd like collectd does.
 -- shape: shape of the graph (LINE2 or AREA)
 -- stacked: whether the shapes should be declared stacked
-function generate_rrdimage ( image, span, width, height, rrd_path,
+function generate_rrdimage ( index, image, span, width, height, rrd_path,
                              metrics, shape, stacked, busy_metric ) 
 
     local rrd_suffix = ".rrd"
@@ -117,31 +119,33 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
     local colors2 = { "#AA0000", "#00AA00", "#0000AA", "#AA00AA", "#00AAAA", "#AAAA00" }
 
     -- fixme: redeclaration of "abs_count" metric name (first in /usr/bin/regmon-genconfig)
-    cmd = cmd .. rrd_metric_def ( "abs_count", rrd_path, file_prefix, rrd_suffix, column_name )
+    cmd = cmd .. rrd_metric_def ( index, "abs_count", rrd_path, file_prefix, rrd_suffix, column_name )
 
     -- print defs for each metric
     for i, metric in ipairs ( metrics ) do
-        cmd = cmd .. rrd_metric_defs ( metric, rrd_path, file_prefix, rrd_suffix, column_name )
+        cmd = cmd .. rrd_metric_defs ( index, metric, rrd_path, file_prefix, rrd_suffix, column_name )
     end
 
     -- add def for other metrics than the explicit monitored one
     -- i.e. "noise = busy - rx - tx"
-    cmd = cmd .. " \"CDEF:rel_noise=rel_" .. busy_metric
+    cmd = cmd .. " \"CDEF:rel_noise" .. index .. "=rel_" .. busy_metric .. index
     for i, metric in ipairs ( metrics ) do
         if ( metric ~= busy_metric ) then
-            cmd = cmd .. ",rel_" .. metric .. ",-"
+            cmd = cmd .. ",rel_" .. metric .. index.. ",-"
         end
     end
     cmd = cmd .. "\" \\\n"
 
     -- normalize noise
-    cmd = cmd .. " \"CDEF:rel_noise_norm=rel_noise,0,LT,0,rel_noise,IF\" \\\n"
+    cmd = cmd .. " \"CDEF:rel_noise" .. index .. "_norm=rel_noise" .. index .. ",0,LT,0,rel_noise" .. index .. ",IF\" \\\n"
 
     -- calculate idle = (abs_count - busy_count) * 100 / abs_count
-    cmd = cmd .. " \"CDEF:rel_idle=abs_count," .. busy_metric .. ",-,100,*,abs_count,/\" \\\n"
+    cmd = cmd .. " \"CDEF:rel_idle" .. index .. "=abs_count" .. index .. "," 
+            .. busy_metric .. index .. ",-,100,*,abs_count" .. index .. ",/\" \\\n"
 
     -- normalize idle
-    cmd = cmd .. " \"CDEF:rel_idle_norm=rel_noise,0,LT,rel_idle,rel_noise,+,rel_idle,IF\" \\\n"
+    cmd = cmd .. " \"CDEF:rel_idle" .. index .. "_norm=rel_noise" .. index 
+        .. ",0,LT,rel_idle" .. index .. ",rel_noise" .. index .. ",+,rel_idle" .. index .. ",IF\" \\\n"
 
     local out_shape = shape
     -- print shapes and legends for each metric
@@ -150,16 +154,16 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
             if ( stacked == '1' and i > 1 ) then
                 out_shape = "STACK"
             end
-            cmd = cmd .. rrd_metric_shape ( metric, stacked, out_shape, colors[i] )
-            cmd = cmd .. rrd_metric_legend ( metric )
+            cmd = cmd .. rrd_metric_shape ( index, metric, stacked, out_shape, colors[i] )
+            cmd = cmd .. rrd_metric_legend ( metric .. index )
         end
     end
 
-    cmd = cmd .. " " .. out_shape .. ":rel_noise_norm" .. colors[#metrics+1] .. ":noise"
-    cmd = cmd .. rrd_metric_legend ( "noise_norm" )
+    cmd = cmd .. " " .. out_shape .. ":rel_noise" .. index .. "_norm" .. colors[#metrics+1] .. ":noise" .. index
+    cmd = cmd .. rrd_metric_legend ( "noise" .. index .. "_norm" )
 
-    cmd = cmd .. " " .. out_shape .. ":rel_idle_norm" .. colors[#metrics+2] .. ":idle"
-    cmd = cmd .. rrd_metric_legend ( "idle_norm" )
+    cmd = cmd .. " " .. out_shape .. ":rel_idle" .. index .. "_norm" .. colors[#metrics+2] .. ":idle" .. index
+    cmd = cmd .. rrd_metric_legend ( "idle" .. index .. "_norm" )
 
     -- print highlight for each metric
     if ( shape == 'AREA' ) then
@@ -169,11 +173,11 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
                 if ( stacked == '1' and i > 1 ) then
                     out_shape = "STACK"
                 end
-                cmd = cmd .. " " .. out_shape .. ":" .. "rel_" .. metric .. colors2[i] .. " \\\n"
+                cmd = cmd .. " " .. out_shape .. ":" .. "rel_" .. metric .. index .. colors2[i] .. " \\\n"
             end
         end
         if ( stacked == '1' ) then
-            cmd = cmd .. " " .. out_shape .. ":rel_noise_norm" .. colors2[#metrics+1] .. " \\\n"
+            cmd = cmd .. " " .. out_shape .. ":rel_noise" .. index .. "_norm" .. colors2[#metrics+1] .. " \\\n"
         end
     end
 
@@ -181,8 +185,8 @@ function generate_rrdimage ( image, span, width, height, rrd_path,
     local rrdtool = io.popen( cmd )
     rrdtool:close()
 
---    -- write command for debug
---    nixio.fs.writefile("/tmp/rrdcmd.txt", cmd .. "\n" )
+    -- write command for debug
+    nixio.fs.writefile("/tmp/rrdcmd" .. index .. ".txt", cmd .. "\n" )
 end
 
 
@@ -199,13 +203,12 @@ function regmon_render()
     local spans = luci.util.split( uci.get( "luci_statistics", "collectd_rrdtool", "RRATimespans" ), "%s+", nil, true )
    	local span  = vars.timespan or uci.get( "luci_statistics", "rrdtool", "default_timespan" ) or spans[1]
 
+    local regmon_paths = uci.get("regmon", "regmon", "regmonpath")
     local metrics = uci.get("regmon", "regmon", "metrics") or {}
     local busy_metric = uci.get("regmon", "regmon", "busycounter") or {}
     local rrd_dir = uci.get("luci_statistics", "collectd_rrdtool", "DataDir") or "/tmp/rrd"
     local rrdimg_dir = uci.get("regmon","rrdtool","imagepath") or "/tmp/regmon"
     local hostname = luci.sys.hostname()
-    local tailcsv_dir = "tail_csv-regmon"
-    local rrdimg = "regmon.png"
     local img_width = uci.get( "regmon", "rrdtool", "width" ) or '800'
     local img_height = uci.get( "regmon", "rrdtool", "height" ) or '500'
     local stacked = uci.get( "regmon", "rrdtool", "stacked" ) or '1'
@@ -213,22 +216,36 @@ function regmon_render()
 
     -- fixme: check if exists before creating
     lfs.mkdir ( rrdimg_dir )
-    
-    generate_rrdimage ( rrdimg_dir .. "/" .. rrdimg
-                      , span
-                      , img_width
-                      , img_height
-                      , rrd_dir .. "/" .. hostname .. "/" .. tailcsv_dir
-                      , metrics
-                      , shape
-                      , stacked
-                      , busy_metric
-                      )
 
-       	-- deliver the image
+    local phys = ""
+    for index, path in ipairs ( regmon_paths ) do
+        local rrdimg = "regmon" .. (index-1) .. ".png"
+        local tailcsv_dir = "tail_csv-regmon" .. (index-1)
+        
+        if ( index ~= 1) then
+            phys = phys .. " "
+        end
+        phys = phys .. index-1
+
+        if ( vars.img == nil or vars.img == index-1 ) then
+            generate_rrdimage ( index-1
+                              , rrdimg_dir .. "/" .. rrdimg
+                              , span
+                              , img_width
+                              , img_height
+                              , rrd_dir .. "/" .. hostname .. "/" .. tailcsv_dir
+                              , metrics
+                              , shape
+                              , stacked
+                              , busy_metric
+                              )
+        end
+    end
+
+    -- deliver the image
   	if vars.img then
    		local l12 = require "luci.ltn12"
-   		local png = io.open(rrdimg_dir .. "/" .. rrdimg, "r")
+   		local png = io.open(rrdimg_dir .. "/" .. "regmon" .. (vars.img) .. ".png", "r")
     	if png then
 	    	luci.http.prepare_content("image/png")
 		    l12.pump.all(l12.source.file(png), luci.http.write)
@@ -242,8 +259,8 @@ function regmon_render()
     luci.template.render( "regmon/graph", {
         timespans        = spans,
         current_timespan = span,
-		img              = "regmon.png",
         metrics          = metrics,
+        phys             = phys,
         error_msg        = error_msg
 	} )
 

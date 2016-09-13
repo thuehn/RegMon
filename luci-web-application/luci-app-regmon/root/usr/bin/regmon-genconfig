@@ -3,11 +3,11 @@
 require("nixio")
 require("luci.model.uci")
 
-function print_metric ( name, index )
-    return "\t<Metric \"" .. name .. "\">\n"
+function print_metric ( name, index, phy )
+    return "\t<Metric \"" .. name .. phy .. "\">\n"
 --           .. "\t\tType \"gauge\"\n"
            .. "\t\tType \"derive\"\n"
-           .. "\t\tInstance \"" .. name .. "\"\n"
+           .. "\t\tInstance \"" .. name .. phy .. "\"\n"
            .. "\t\tValueFrom " .. index .. "\n"
            .. "\t</Metric>\n"
 end
@@ -18,9 +18,9 @@ local uci = luci.model.uci.cursor()
 -- regmon options
 local startindex = uci.get("regmon", "regmon", "startindex") or 3
 local metrics = uci.get("regmon", "regmon", "metrics") or {}
-local regmon_path = uci.get("regmon", "regmon", "regmonpath")
-            or "/sys/kernel/debug/ieee80211/phy0/regmon"
--- local regmon_path = "/tmp"
+local regmon_paths = uci.get("regmon", "regmon", "regmonpath")
+            or { "/sys/kernel/debug/ieee80211/phy0/regmon" }
+-- local regmon_path = { "/tmp" }
 local use_sys_time = uci.get("regmon", "regmon", "usesystime") or false
 local time_from = 0
 if ( use_sys_time == '0' ) then
@@ -52,33 +52,39 @@ nixio.stdout:write("<Plugin \"tail_csv\">\n")
 
 nixio.stdout:write("\n")
 
-nixio.stdout:write( print_metric ( abs_count_metric, abs_count_field ) )
-for i,m in ipairs(metrics) do
-    local metric = print_metric(m, i + startindex - 1)
-    nixio.stdout:write(metric)
+for index,regmon_path in ipairs ( regmon_paths ) do
+
+    nixio.stdout:write( print_metric ( abs_count_metric, abs_count_field, index - 1) )
+    for i,m in ipairs(metrics) do
+        local metric = print_metric(m, i + startindex - 1, index - 1)
+        nixio.stdout:write(metric)
+    end
+
+    nixio.stdout:write("\n")
 end
 
-nixio.stdout:write("\n")
+for index,regmon_path in ipairs ( regmon_paths ) do
 
-nixio.stdout:write("\t<File \"" .. regmon_path .. "/register_log" .. "\">\n")
+    nixio.stdout:write("\t<File \"" .. regmon_path .. "/register_log" .. "\">\n")
 
-nixio.stdout:write("\t\tInstance \"regmon\"\n")
-nixio.stdout:write("\t\tInterval " .. interval .. "\n")
+    nixio.stdout:write("\t\tInstance \"regmon" .. (index-1) .. "\"\n")
+    nixio.stdout:write("\t\tInterval " .. interval .. "\n")
 
-nixio.stdout:write("\t\tCollect")
-nixio.stdout:write( "\"" .. abs_count_metric .. "\"")
-for _,m in ipairs(metrics) do
-    nixio.stdout:write(" \"" .. m .. "\"")
+    nixio.stdout:write("\t\tCollect ")
+    nixio.stdout:write( "\"" .. abs_count_metric .. ( index - 1 ) .. "\"")
+    for _,m in ipairs(metrics) do
+        nixio.stdout:write(" \"" .. m .. ( index - 1 ) .. "\"")
+    end
+    nixio.stdout:write("\n")
+
+    -- use cvs field number 0 as timestamp in rrd
+    if ( not use_system_time ) then
+        nixio.stdout:write("\t\tTimeFrom " .. time_from .. "\n")
+    end
+
+    nixio.stdout:write("\t</File>\n")
+
+    nixio.stdout:write("\n")
 end
-nixio.stdout:write("\n")
-
--- use cvs field number 0 as timestamp in rrd
-if ( not use_system_time ) then
-    nixio.stdout:write("\t\tTimeFrom " .. time_from .. "\n")
-end
-
-nixio.stdout:write("\t</File>\n")
-
-nixio.stdout:write("\n")
 
 nixio.stdout:write("</Plugin>\n")

@@ -5,10 +5,12 @@ start() {
     
         /etc/init.d/collectd stop
 
-        regmon_path=`uci get regmon.regmon.regmonpath`
-        sampling_rate=`uci get regmon.regmon.samplingrate`
-        echo ${sampling_rate} > ${regmon_path}/sampling_interval
-    
+        regmon_paths=`uci get regmon.regmon.regmonpath`
+        for regmon_path in $regmon_paths; do
+            sampling_rate=`uci get regmon.regmon.samplingrate`
+            echo ${sampling_rate} > ${regmon_path}/sampling_interval
+        done
+
         if [ -e /etc/collectd.conf ]; then
             ### create config
             /usr/bin/regmon-genconfig >> /etc/collectd.conf
