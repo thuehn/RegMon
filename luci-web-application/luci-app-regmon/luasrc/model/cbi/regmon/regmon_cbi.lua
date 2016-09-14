@@ -101,6 +101,10 @@ shape = e:option(ListValue, "shape", translate("RRDTool graph shape"))
 shape.optional = false
 shape.rmempty = false
 
+highlight = e:option(Flag, "highlight", translate("RRDTool highlight lines"))
+highlight.optional = false
+highlight.rmempty = false
+
 for _,s in ipairs(shapes) do
     shape:value(s)
 end

@@ -89,7 +89,7 @@ end
 -- shape: shape of the graph (LINE2 or AREA)
 -- stacked: whether the shapes should be declared stacked
 function generate_rrdimage ( phy, image, span, width, height, rrd_path,
-                             metrics, shape, stacked, busy_metric ) 
+                             metrics, shape, stacked, highlight, busy_metric ) 
 
     local rrd_suffix = ".rrd"
     local column_name = "value"
@@ -169,7 +169,7 @@ function generate_rrdimage ( phy, image, span, width, height, rrd_path,
     cmd = cmd .. rrd_metric_legend ( "idle" .. phy .. "_norm" )
 
     -- print highlight for each metric
-    if ( shape == 'AREA' ) then
+    if ( shape == 'AREA' and highlight == '1' ) then
         out_shape = "LINE2"
         for i, metric in ipairs ( metrics ) do
             if ( metric ~= busy_metric ) then
@@ -212,6 +212,7 @@ function regmon_render()
     local img_width = uci.get( "regmon", "rrdtool", "width" ) or '800'
     local img_height = uci.get( "regmon", "rrdtool", "height" ) or '500'
     local stacked = uci.get( "regmon", "rrdtool", "stacked" ) or '1'
+    local highlight = uci.get( "regmon", "rrdtool", "highlight" ) or '1'
     local shape = uci.get( "regmon", "rrdtool", "shape" ) or 'AREA'
 
     -- fixme: check if exists before creating
@@ -241,6 +242,7 @@ function regmon_render()
                               , metrics
                               , shape
                               , stacked
+                              , highlight
                               , busy_metric
                               )
 --        end
