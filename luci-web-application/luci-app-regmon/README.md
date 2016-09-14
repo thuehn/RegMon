@@ -107,6 +107,9 @@ Graph shape:
 
 The graph shape option let you choose whether the values are displayed as lines or as filled areas.
 
+Highlight lines:
+
+In area shaped graphs this option let RRDTool draw a highlight line between the areas.
 
 ###Graph###
 
