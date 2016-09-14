@@ -4,13 +4,23 @@ m = Map("regmon", translate("Regmon Config"), translate("Set options for Regmon"
 c = m:section(TypedSection, "regmon", translate("regmon entries"))
 c.anonymous = true
 
-regmon_path = c:option(DynamicList, "regmonpath", translate("Regmon path")) 
+regmon_path = c:option(DynamicList, "regmonpath", translate("Regmon paths")) 
 regmon_path.optional = false
 regmon_path.rmempty = false
 
 sampling_rate = c:option(Value, "samplingrate", translate("Sampling rate")) 
 sampling_rate.optional = false
 sampling_rate.rmempty = false
+
+function sampling_rate.validate ( self, value )
+    if ( tonumber ( value ) > 1000000000 ) then
+        return nil, "Maximum 'Sampling rate' limit exceeded."
+    elseif ( tonumber ( value ) < 100000000 ) then
+        return nil, "Minimum 'Sampling rate' limit underrun."
+    else
+        return value
+    end
+end
 
 time_from = c:option (Value, "timefrom", translate ("Time from field"))
 time_from.optional = false
@@ -24,10 +34,6 @@ absolute_counter = c:option ( Value, "absolutecounter", translate ("Absolute cou
 absolute_counter.optional = false
 absolute_counter.rmempty = false
 
-busy_counter = c:option ( Value, "busycounter", translate ("Busy counter field"))
-busy_counter.optional = false
-busy_counter.rmempty = false
-
 startindex = c:option(Value, "startindex", translate("Start index of relative counter fields"))
 startindex.optional = false
 startindex.rmempty = false
@@ -35,6 +41,30 @@ startindex.rmempty = false
 metrics = c:option(DynamicList, "metrics", translate("Register Log Fields"))
 metrics.optional = false
 metrics.rmempty = false
+
+metrics_values = {}
+function metrics.validate ( self, value )
+    for _, metric in ipairs ( value ) do
+        if ( metrics_values [ metric ] == nil ) then
+            metrics_values [ metric ] = true
+        else
+            return nil, "Duplicate field '" .. metric .. "'."
+        end
+    end
+    return value
+end
+
+busy_counter = c:option ( Value, "busycounter", translate ("Busy counter field"))
+busy_counter.optional = false
+busy_counter.rmempty = false
+
+function busy_counter.validate ( self, value )
+    if ( metrics_values [ value ] == nil ) then
+        return nil, "'Busy counter field' not contained in 'Register log fields'."
+    else
+        return value
+    end
+end
 
 d = m:section(TypedSection, "collectd", translate("collectd entries"))
 d.anonymous = true
