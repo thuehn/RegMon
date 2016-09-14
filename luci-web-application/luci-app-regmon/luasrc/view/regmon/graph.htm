@@ -27,7 +27,7 @@
 <% for i, phy in ipairs ( phys_list ) do %>
     <h3>Device <%=phy%></h3>
     <div style="text-align: center">
-       <img src="<%=REQUEST_URI%>?timespan=<%=current_timespan%>&phys=<%=phys%>&img=<%=phy%>" id="regmonimg<%=phy%>" />
+       <img src="/luci-static/resources/icons/loading.gif" id="regmonimg<%=phy%>" />
     </div>
 <% end %>
 
@@ -35,10 +35,10 @@
     function refresh(x) {
         <% for i, phy in ipairs ( phys_list ) do %>
             var img = document.getElementById('regmonimg<%=phy%>');
-            img.src  = "<%=REQUEST_URI%>?timespan=<%=current_timespan%>&phys=<%=phys%>&img=<%=phy%>&" + new Date().getTime();
+            img.src  = "<%=REQUEST_URI%>?timespan=<%=current_timespan%>&img=<%=phy%>&phys=<%=phys%>&" + new Date().getTime();
         <% end %>
     }
-    XHR.poll (30, '<%=path%>?timespan=<%=current_timespan%>&phys=<%=phys%>', null, function (xhr, json) { refresh(xhr) })
+    XHR.poll (30, "<%=REQUEST_URI%>?timespan=<%=current_timespan%>", null, function (xhr, json) { refresh(xhr) })
 </script>
 
 <%+footer%>

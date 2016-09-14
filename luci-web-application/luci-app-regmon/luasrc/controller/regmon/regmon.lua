@@ -7,20 +7,24 @@ require ("lfs")
 function index()
 
     -- entry for menu node
-    entry({"admin", "statistics", "regmon"}, firstchild(), "Regmon", 60).dependent=false
+    entry ( { "admin", "statistics", "regmon" }, firstchild (), "Regmon", 60 ).dependent=false
     
     -- entry and route for the config page
-    entry({"admin", "statistics", "regmon", "regmon_cbi"}, cbi("regmon/regmon_cbi"), "Config", 1)
+    entry ( { "admin", "statistics", "regmon", "regmon_cbi" }, cbi ( "regmon/regmon_cbi" ), "Config", 1)
     
     -- entry and route for the graph page
-    entry({"admin", "statistics", "regmon", "graph"}, template("regmon/graph"), "Graph", 2)  
+    entry ( { "admin", "statistics", "regmon", "graph" }, template ( "regmon/graph" ), "Graph", 2)  
 
     -- route of the image
     local vars = luci.http.formvalue(nil, true)
 	local span = vars.timespan or nil
     local phys = vars.phys or "0"
-	entry({"admin", "statistics", "regmon", "graph" }, 
-        call("regmon_render"), "Graph", 3).query = { timespan = span, phys = phys }
+    local img = vars.img or nil
+	entry ( { "admin", "statistics", "regmon", "graph" }, 
+                call ( "regmon_render" ), "Graph", 3 ).query = { timespan = span
+                                                               , phys = phys 
+                                                               , img = img
+                                                               }
 end
 
 
@@ -228,11 +232,7 @@ function regmon_render()
         end
         phys = phys .. index-1
 
---        TODO: don't render all images on each call
---        fixme: vars.img == nil or vars.img == index-1 
---               and the image will be overwritten by 
---               a default one, i.e. 1day timespan
---        if ( vars.img == nil or vars.img == index-1 ) then
+        if ( vars.img == nil or tonumber ( vars.img ) == index-1 ) then
             generate_rrdimage ( index-1
                               , rrdimg_dir .. "/" .. rrdimg
                               , span
@@ -245,7 +245,7 @@ function regmon_render()
                               , highlight
                               , busy_metric
                               )
---        end
+        end
     end
 
     -- deliver the image
@@ -262,11 +262,13 @@ function regmon_render()
    	end
 
     -- render page
-    luci.template.render( "regmon/graph", {
-        timespans        = spans,
-        current_timespan = span,
-        metrics          = metrics,
-        phys             = phys
-	} )
+    if (vars.img == nil) then
+        luci.template.render( "regmon/graph", {
+            timespans        = spans,
+            current_timespan = span,
+            metrics          = metrics,
+            phys             = phys
+    	} )
+    end
 
 end
