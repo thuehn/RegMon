@@ -1,5 +1,0 @@
-config 'luci_statistics'
-    list affects 'regmon'
-
-config 'regmon'
-    option init 'luci-app-regmon'

@@ -5,9 +5,11 @@ uci -q batch <<-EOF >/dev/null
 	delete ucitrack.@regmon[-1]
 	add ucitrack regmon
 	set ucitrack.@regmon[-1].init=luci-app-regmon
-    add_list ucitrack.@luci_statistics[-1].affects=regmon
+	add_list ucitrack.@luci_statistics[-1].affects=regmon
 	commit ucitrack
 EOF
 
-rm -f /tmp/luci-indexcache
+# remove LuCI cache
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache
+
 exit 0
