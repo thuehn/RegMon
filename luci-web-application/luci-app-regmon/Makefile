@@ -47,8 +47,8 @@ define Package/luci-app-regmon/install
 		$(INSTALL_DATA) ./luasrc/view/regmon/graph.htm $(1)/usr/lib/lua/luci/view/regmon/graph.htm
 		$(INSTALL_DATA) ./luasrc/controller/regmon/regmon.lua $(1)/usr/lib/lua/luci/controller/regmon/regmon.lua
 		$(INSTALL_DATA) ./root/etc/uci-defaults/41_regmon $(1)/etc/uci-defaults/41_regmon
-		$(INSTALL_DATA) ./root/etc/config/ucitrack $(1)/etc/config/ucitrack
 
 endef
+#		$(INSTALL_DATA) ./root/etc/config/ucitrack $(1)/etc/config/ucitrack
 
 $(eval $(call BuildPackage,luci-app-regmon))
