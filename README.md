@@ -157,6 +157,19 @@ tail -f /sys/kernel/debug/ieee80211/phy0/regmon/register_log | lzop > /tmp/regis
 - parser scripts (mainly AWK) to bring the raw RegMon data in proper shape to ananlyse with R
 - R scripts to perform statistics and generate plots
 
+## Do you want to contribute ?
+Everybody can participate, and any help is highly appreciated.
+Feel free to send pull requests or open a new issue via GitHub.
+- testing RegMon and its performance in your environment
+- reviewing kernel patches (get your hands on QUILT to work with patch series)
+
+### Supporters and Developers
+- Thomas Huehn from TU-Berlin
+- Dennis Roeper
+
+### former contributors
+- Alina Friedrichsen
+
 ### How to reference to  RegMon ?
 Just use the following bibtex :
 ```
