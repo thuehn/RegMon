@@ -41,6 +41,10 @@ src-git regmon https://github.com/thuehn/RegMon
 4. rebuild your LEDE image
 5. flash a new image or install the luci_app_regmon with the hepl of opkg
 
+### Example of RegMons LUCI web interface view
+
+![alt tag](https://cloud.githubusercontent.com/assets/1880886/23343835/f4597a72-fc71-11e6-96a5-edb17961e1f6.png)
+
 ### How to use RegMon sampling
 This first 7 registers are hardcoded into RegMon, which are:
 - register_0 = TSF upper time stamp
