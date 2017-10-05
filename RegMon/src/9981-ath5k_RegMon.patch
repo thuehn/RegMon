@@ -172,7 +172,7 @@
  
  	/* Initialize driver private data */
  	SET_IEEE80211_DEV(hw, ah->dev);
-@@ -2675,6 +2829,46 @@ ath5k_init_ah(struct ath5k_hw *ah, const
+@@ -2677,6 +2831,46 @@ ath5k_init_ah(struct ath5k_hw *ah, const
  
  	ath5k_debug_init_device(ah);
  
@@ -210,7 +210,7 @@
 +
 +		/* a certain delay seems to be needed for proper start */
 +		usleep_range(10000000,20000000);
-+		hrtimer_start(&ah->hrtm.timer, ah->hrtm.interval,
++		hrtimer_start(&ah->hrtm.timer, ah->reg_interval, //ah->hrtm.interval,
 +			      HRTIMER_MODE_REL);
 +		printk(KERN_ERR "ath9k debug: regmon started successfuly.\n");
 +	}
@@ -219,7 +219,7 @@
  	/* ready to process interrupts */
  	__clear_bit(ATH_STAT_INVALID, ah->status);
  
-@@ -2778,8 +2972,8 @@ int ath5k_start(struct ieee80211_hw *hw)
+@@ -2780,8 +2974,8 @@ int ath5k_start(struct ieee80211_hw *hw)
  
  	for (i = 0; i < ARRAY_SIZE(ah->bslot); i++)
  		ah->bslot[i] = NULL;
@@ -229,7 +229,7 @@
  done:
  	mmiowb();
  	mutex_unlock(&ah->lock);
-@@ -3130,6 +3324,9 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
+@@ -3132,6 +3326,9 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
  {
  	struct ieee80211_hw *hw = ah->hw;
  
@@ -239,7 +239,7 @@
  	/*
  	 * NB: the order of these is important:
  	 * o call the 802.11 layer before detaching ath5k_hw to
-@@ -3157,6 +3354,22 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
+@@ -3159,6 +3356,22 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
  	 */
  	ath5k_hw_deinit(ah);
  	free_irq(ah->irq, ah);
@@ -284,7 +284,7 @@
  #include "desc.h"
 @@ -1254,6 +1265,14 @@ struct ath5k_statistics {
  
- DECLARE_EWMA(beacon_rssi, 1024, 8)
+ DECLARE_EWMA(beacon_rssi, 10, 8)
  
 +#ifdef CPTCFG_ATH5K_DEBUG
 +	/* RegMon hrtimer */
