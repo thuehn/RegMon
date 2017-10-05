@@ -8,6 +8,26 @@ regmon_path = c:option(DynamicList, "regmonpath", translate("Regmon paths"))
 regmon_path.optional = false
 regmon_path.rmempty = false
 
+function regmon_path.validate ( self, value )
+    require 'exists'
+    local msg = nil
+    local state = true
+    for _, path in ipairs ( value ) do
+        if ( not isDir ( path ) ) then
+            state = false
+            msg = "Regmon path '" .. path .. "' doesn't exists."
+        elseif ( not isFile ( path .. "/register_log" ) ) then
+            state = false
+            msg = "Regmon path '" .. path .. "' doesn't contain a 'register_log' file"
+        end
+    end
+    if ( not state ) then
+        return nil, msg
+    else
+        return value
+    end
+end
+
 sampling_rate = c:option(Value, "samplingrate", translate("Sampling rate")) 
 sampling_rate.optional = false
 sampling_rate.rmempty = false
