@@ -2,10 +2,10 @@ module("luci.controller.regmon.regmon", package.seeall)
 
 require ("lfs")
 -- require("luci.i18n")
-local uci = require "luci.model.uci".cursor()
 
 -- Routing and menu index for the luci dispatcher.
 function index()
+    local uci = require "luci.model.uci".cursor()
 
     -- hide index when no wireless device is enabled at all
     -- to avoid rendering graphs when no regmon traces are available
