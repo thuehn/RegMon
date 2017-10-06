@@ -2,9 +2,16 @@ module("luci.controller.regmon.regmon", package.seeall)
 
 require ("lfs")
 -- require("luci.i18n")
+local uci = require "luci.model.uci".cursor()
 
 -- Routing and menu index for the luci dispatcher.
 function index()
+
+    -- hide index when no wireless device is enabled at all
+    -- to avoid rendering graphs when no regmon traces are available
+    local state = false
+    uci:foreach ( "wireless", "wifi-iface", function(s) if ( not s['disabled'] ) then state = true end end )
+    if ( not state ) then return end
 
     -- entry for menu node
     entry ( { "admin", "statistics", "regmon" }, firstchild (), "Regmon", 60 ).dependent=false
@@ -15,11 +22,12 @@ function index()
     -- entry and route for the graph page
     entry ( { "admin", "statistics", "regmon", "graph" }, template ( "regmon/graph" ), "Graph", 2)  
 
-    -- route of the image
     local vars = luci.http.formvalue(nil, true)
 	local span = vars.timespan or nil
     local phys = vars.phys or "0"
     local img = vars.img or nil
+
+    -- route of the image
 	entry ( { "admin", "statistics", "regmon", "graph" }, 
                 call ( "regmon_render" ), "Graph", 3 ).query = { timespan = span
                                                                , phys = phys 
