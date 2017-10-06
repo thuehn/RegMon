@@ -6,6 +6,7 @@ uci -q batch <<-EOF >/dev/null
 	add ucitrack regmon
 	set ucitrack.@regmon[-1].init=luci-app-regmon
 	add_list ucitrack.@luci_statistics[-1].affects=regmon
+	add_list ucitrack.@wireless[-1].affects=regmon
 	commit ucitrack
 EOF
 
