@@ -17,7 +17,7 @@
  struct ath_node;
  struct ath_vif;
  
-@@ -1010,6 +1020,14 @@ struct ath9k_gpio_chip {
+@@ -1011,6 +1021,14 @@ struct ath9k_gpio_chip {
  };
  #endif
  
@@ -32,7 +32,7 @@
  struct ath_softc {
  	struct ieee80211_hw *hw;
  	struct device *dev;
-@@ -1075,6 +1093,21 @@ struct ath_softc {
+@@ -1076,6 +1094,21 @@ struct ath_softc {
  
  #ifdef CPTCFG_ATH9K_DEBUGFS
  	struct ath9k_debug debug;
@@ -217,7 +217,7 @@
  static char *dev_info = "ath9k";
  
  MODULE_AUTHOR("Atheros Communications");
-@@ -992,6 +1146,12 @@ int ath9k_init_device(u16 devid, struct
+@@ -995,6 +1149,12 @@ int ath9k_init_device(u16 devid, struct
  	struct ath_hw *ah;
  	int error = 0;
  	struct ath_regulatory *reg;
@@ -230,7 +230,7 @@
  
  	/* Bring up device */
  	error = ath9k_init_softc(devid, sc, bus_ops);
-@@ -1042,6 +1202,45 @@ int ath9k_init_device(u16 devid, struct
+@@ -1045,6 +1205,45 @@ int ath9k_init_device(u16 devid, struct
  		goto unregister;
  	}
  
@@ -276,7 +276,7 @@
  	/* Handle world regulatory */
  	if (!ath_is_world_regd(reg)) {
  		error = regulatory_hint(hw->wiphy, reg->alpha2);
-@@ -1073,6 +1272,9 @@ deinit:
+@@ -1076,6 +1275,9 @@ deinit:
  static void ath9k_deinit_softc(struct ath_softc *sc)
  {
  	int i = 0;
@@ -286,7 +286,7 @@
  
  	ath9k_deinit_p2p(sc);
  	ath9k_deinit_btcoex(sc);
-@@ -1086,6 +1288,21 @@ static void ath9k_deinit_softc(struct at
+@@ -1089,6 +1291,21 @@ static void ath9k_deinit_softc(struct at
  	if (sc->dfs_detector != NULL)
  		sc->dfs_detector->exit(sc->dfs_detector);
  
@@ -310,25 +310,25 @@
  
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -100,9 +100,17 @@ void ath_ps_full_sleep(unsigned long dat
- 	struct ath_softc *sc = (struct ath_softc *) data;
+@@ -101,9 +101,17 @@ void ath_ps_full_sleep(unsigned long dat
  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	unsigned long flags;
  	bool reset;
 +#ifdef CPTCFG_ATH9K_DEBUGFS
-+	int res;
++	      int res;
 +#endif
  
- 	spin_lock(&common->cc_lock);
+ 	spin_lock_irqsave(&common->cc_lock, flags);
  	ath_hw_cycle_counters_update(common);
 +#ifdef CPTCFG_ATH9K_DEBUGFS
 +	/* RegMon cancel in case of full sleep */
 +	sc->shutdown = 1;
 +	res = hrtimer_try_to_cancel(&sc->hrtm.timer);
 +#endif
- 	spin_unlock(&common->cc_lock);
+ 	spin_unlock_irqrestore(&common->cc_lock, flags);
  
  	ath9k_hw_setrxabort(sc->sc_ah, 1);
-@@ -214,6 +222,13 @@ static bool ath_prepare_reset(struct ath
+@@ -215,6 +223,13 @@ static bool ath_prepare_reset(struct ath
  {
  	struct ath_hw *ah = sc->sc_ah;
  	bool ret = true;
@@ -342,7 +342,7 @@
  
  	ieee80211_stop_queues(sc->hw);
  	ath_stop_ani(sc);
-@@ -277,6 +292,14 @@ static bool ath_complete_reset(struct at
+@@ -278,6 +293,14 @@ static bool ath_complete_reset(struct at
  	ieee80211_wake_queues(sc->hw);
  	ath9k_p2p_ps_timer(sc);
  
@@ -357,7 +357,7 @@
  	return true;
  }
  
-@@ -750,6 +773,16 @@ static int ath9k_start(struct ieee80211_
+@@ -751,6 +774,16 @@ static int ath9k_start(struct ieee80211_
  
  	ath9k_ps_restore(sc);
  
@@ -374,7 +374,7 @@
  	return 0;
  }
  
-@@ -836,6 +869,14 @@ static void ath9k_stop(struct ieee80211_
+@@ -837,6 +870,14 @@ static void ath9k_stop(struct ieee80211_
  	struct ath_hw *ah = sc->sc_ah;
  	struct ath_common *common = ath9k_hw_common(ah);
  	bool prev_idle;
