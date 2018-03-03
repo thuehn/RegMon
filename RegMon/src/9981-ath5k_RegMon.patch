@@ -156,7 +156,7 @@
  /***********************\
  * Driver Initialization *
  \***********************/
-@@ -2547,8 +2696,13 @@ ath5k_init_ah(struct ath5k_hw *ah, const
+@@ -2536,8 +2685,13 @@ ath5k_init_ah(struct ath5k_hw *ah, const
  {
  	struct ieee80211_hw *hw = ah->hw;
  	struct ath_common *common;
@@ -172,7 +172,7 @@
  
  	/* Initialize driver private data */
  	SET_IEEE80211_DEV(hw, ah->dev);
-@@ -2693,6 +2847,46 @@ ath5k_init_ah(struct ath5k_hw *ah, const
+@@ -2677,6 +2831,46 @@ ath5k_init_ah(struct ath5k_hw *ah, const
  
  	ath5k_debug_init_device(ah);
  
@@ -219,7 +219,7 @@
  	/* ready to process interrupts */
  	__clear_bit(ATH_STAT_INVALID, ah->status);
  
-@@ -2796,8 +2990,8 @@ int ath5k_start(struct ieee80211_hw *hw)
+@@ -2780,8 +2974,8 @@ int ath5k_start(struct ieee80211_hw *hw)
  
  	for (i = 0; i < ARRAY_SIZE(ah->bslot); i++)
  		ah->bslot[i] = NULL;
@@ -229,7 +229,7 @@
  done:
  	mmiowb();
  	mutex_unlock(&ah->lock);
-@@ -3148,6 +3342,9 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
+@@ -3132,6 +3326,9 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
  {
  	struct ieee80211_hw *hw = ah->hw;
  
@@ -239,7 +239,7 @@
  	/*
  	 * NB: the order of these is important:
  	 * o call the 802.11 layer before detaching ath5k_hw to
-@@ -3175,6 +3372,22 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
+@@ -3159,6 +3356,22 @@ ath5k_deinit_ah(struct ath5k_hw *ah)
  	 */
  	ath5k_hw_deinit(ah);
  	free_irq(ah->irq, ah);
