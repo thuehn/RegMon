@@ -17,7 +17,7 @@
  struct ath_node;
  struct ath_vif;
  
-@@ -1010,6 +1020,14 @@ struct ath9k_gpio_chip {
+@@ -1011,6 +1021,14 @@ struct ath9k_gpio_chip {
  };
  #endif
  
@@ -32,7 +32,7 @@
  struct ath_softc {
  	struct ieee80211_hw *hw;
  	struct device *dev;
-@@ -1075,6 +1093,21 @@ struct ath_softc {
+@@ -1076,6 +1094,21 @@ struct ath_softc {
  
  #ifdef CPTCFG_ATH9K_DEBUGFS
  	struct ath9k_debug debug;
@@ -217,7 +217,7 @@
  static char *dev_info = "ath9k";
  
  MODULE_AUTHOR("Atheros Communications");
-@@ -992,6 +1146,12 @@ int ath9k_init_device(u16 devid, struct
+@@ -995,6 +1149,12 @@ int ath9k_init_device(u16 devid, struct
  	struct ath_hw *ah;
  	int error = 0;
  	struct ath_regulatory *reg;
@@ -230,7 +230,7 @@
  
  	/* Bring up device */
  	error = ath9k_init_softc(devid, sc, bus_ops);
-@@ -1042,6 +1202,45 @@ int ath9k_init_device(u16 devid, struct
+@@ -1045,6 +1205,45 @@ int ath9k_init_device(u16 devid, struct
  		goto unregister;
  	}
  
@@ -276,7 +276,7 @@
  	/* Handle world regulatory */
  	if (!ath_is_world_regd(reg)) {
  		error = regulatory_hint(hw->wiphy, reg->alpha2);
-@@ -1073,6 +1272,9 @@ deinit:
+@@ -1076,6 +1275,9 @@ deinit:
  static void ath9k_deinit_softc(struct ath_softc *sc)
  {
  	int i = 0;
@@ -286,7 +286,7 @@
  
  	ath9k_deinit_p2p(sc);
  	ath9k_deinit_btcoex(sc);
-@@ -1086,6 +1288,21 @@ static void ath9k_deinit_softc(struct at
+@@ -1089,6 +1291,21 @@ static void ath9k_deinit_softc(struct at
  	if (sc->dfs_detector != NULL)
  		sc->dfs_detector->exit(sc->dfs_detector);
  
