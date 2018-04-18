@@ -209,23 +209,24 @@ end
 -- since we use rrdtool1 (1.0.50) that doesn't provide lua bindings
 -- we apply a shell command for rrd graph generation
 function regmon_render()
-
+	
+	local uci = require "luci.model.uci".cursor()
     -- create the image
     local vars  = luci.http.formvalue()
-    local spans = luci.util.split( uci.get( "luci_statistics", "collectd_rrdtool", "RRATimespans" ), "%s+", nil, true )
-   	local span  = vars.timespan or uci.get( "luci_statistics", "rrdtool", "default_timespan" ) or spans[1]
+    local spans = luci.util.split( uci:get( "luci_statistics", "collectd_rrdtool", "RRATimespans" ), "%s+", nil, true )
+   	local span  = vars.timespan or uci:get( "luci_statistics", "rrdtool", "default_timespan" ) or spans[1]
 
-    local regmon_paths = uci.get("regmon", "regmon", "regmonpath")
-    local metrics = uci.get("regmon", "regmon", "metrics") or {}
-    local busy_metric = uci.get("regmon", "regmon", "busycounter") or {}
-    local rrd_dir = uci.get("luci_statistics", "collectd_rrdtool", "DataDir") or "/tmp/rrd"
-    local rrdimg_dir = uci.get("regmon","rrdtool","imagepath") or "/tmp/regmon"
+    local regmon_paths = uci:get("regmon", "regmon", "regmonpath")
+    local metrics = uci:get("regmon", "regmon", "metrics") or {}
+    local busy_metric = uci:get("regmon", "regmon", "busycounter") or {}
+    local rrd_dir = uci:get("luci_statistics", "collectd_rrdtool", "DataDir") or "/tmp/rrd"
+    local rrdimg_dir = uci:get("regmon","rrdtool","imagepath") or "/tmp/regmon"
     local hostname = luci.sys.hostname()
-    local img_width = uci.get( "regmon", "rrdtool", "width" ) or '800'
-    local img_height = uci.get( "regmon", "rrdtool", "height" ) or '500'
-    local stacked = uci.get( "regmon", "rrdtool", "stacked" ) or '1'
-    local highlight = uci.get( "regmon", "rrdtool", "highlight" ) or '1'
-    local shape = uci.get( "regmon", "rrdtool", "shape" ) or 'AREA'
+    local img_width = uci:get( "regmon", "rrdtool", "width" ) or '800'
+    local img_height = uci:get( "regmon", "rrdtool", "height" ) or '500'
+    local stacked = uci:get( "regmon", "rrdtool", "stacked" ) or '1'
+    local highlight = uci:get( "regmon", "rrdtool", "highlight" ) or '1'
+    local shape = uci:get( "regmon", "rrdtool", "shape" ) or 'AREA'
 
     -- fixme: check if exists before creating
     lfs.mkdir ( rrdimg_dir )
