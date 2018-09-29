@@ -68,7 +68,7 @@
  
 --- a/drivers/net/wireless/ath/ath.h
 +++ b/drivers/net/wireless/ath/ath.h
-@@ -172,6 +172,7 @@ struct ath_common {
+@@ -170,6 +170,7 @@ struct ath_common {
  	unsigned int clockrate;
  
  	spinlock_t cc_lock;
