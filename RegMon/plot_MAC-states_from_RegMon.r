@@ -29,7 +29,6 @@ p1 = ggplot(data=all_mac, aes (x=ktime/1000000000)) +
         axis.text.x = element_text(size = 15, colour = "black"),
         axis.text.y = element_text(size = 15, colour = "black"),
         plot.title=element_text(colour="black", face="plain", size=20, vjust = 1.5, hjust = 0.5),
-        plot.title = element_text(size = 14),
         strip.background = element_rect(colour='grey30', fill='grey80'),
         legend.title=element_text(colour="black", size=16, hjust=-.1, face="plain"),
         legend.text=element_text(colour="black", size=15, face="plain"),
