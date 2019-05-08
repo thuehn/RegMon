@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript --vanilla
+#!/usr/bin/Rscript
 
 library(ggplot2)
 library(reshape2)
