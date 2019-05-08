@@ -97,9 +97,13 @@ The provided awk script **parse_default_RegMon-trace.awk** is such an example of
 - change hexadecimal representation into decimal
 - add an optional header to the parsed data
 
-You can use the provided awk parser by issuing:
+You can use the provided awk parser script for ath5k by issuing:
 ```
-cat register_log | gawk --non-decimal-data -v header=1 -v clock=44 -f parse_default_RegMon-trace.awk
+cat register_log_ath5k | gawk --non-decimal-data -v header=1 -v clock=44 -f parse_ath5k_RegMon-trace.awk
+```
+or for ath9k by using:
+```
+cat register_log_ath9k | gawk --non-decimal-data -v header=1 -v clock=44 -f parse_ath9k_RegMon-trace.awk
 ```
 
 this leads to the following output:
@@ -125,7 +129,7 @@ where:
 ... and now you can plot your mac busy state distribution over time. I prefer Rscript for plotting and so there is an example Rscript *plot_MAC-states_from_RegMon.r* which generates the output plot *RegMon.png*. For the Rscript to work you need R and the R packages: gglpot2, reshape2 and scales.
 ```
 cat register_log | \
-  gawk --non-decimal-data -v header=1 -v clock=44 -f parse_default_RegMon-trace.awk | \
+  gawk --non-decimal-data -v header=1 -v clock=44 -f parse_ath(5 or 9)k_RegMon-trace.awk | \
   ./plot_MAC-states_from_RegMon.r
   
 open RegMon.png
