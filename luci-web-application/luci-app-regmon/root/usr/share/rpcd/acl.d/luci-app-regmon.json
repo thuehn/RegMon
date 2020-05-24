@@ -11,7 +11,8 @@
 		"write": {
 			"uci": [ "regmon" ],
             "file": {
-                "/tmp/regmon": [ "write" ]
+                "/tmp/regmon": [ "write" ],
+                "/etc/collectd.conf": [ "write" ]
                 }
 		}
 	}
