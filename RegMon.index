@@ -4,7 +4,7 @@ Build-Depends: lua/host luci-base/host
 Package: luci-app-regmon
 Submenu: 3. Applications
 Version: x-1
-Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +luci-compat
 Conflicts: 
 Menu-Depends: 
 Provides: 

@@ -19,7 +19,7 @@ define Package/luci-app-regmon
 	CATEGORY:=LuCI
 	SUBMENU:=3. Applications
 	TITLE:=LuCI Support for Regmon
-	DEPENDS:=+lua +luafilesystem +luci-base +rrdtool1 +collectd +collectd-mod-tail-csv +luci-app-statistics
+	DEPENDS:=+luci-compat +lua +luafilesystem +luci-base +rrdtool1 +collectd +collectd-mod-tail-csv +luci-app-statistics
 	MAINTAINER:=Denis Roeper <denis.roeper@posteo.de>
 	PKGARCH:=all
 endef
