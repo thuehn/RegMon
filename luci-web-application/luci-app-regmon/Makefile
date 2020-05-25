@@ -33,6 +33,7 @@ define Build/Compile
 endef
 
 define Package/luci-app-regmon/install
+		$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 		$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/regmon
 		$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/regmon
 		$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/regmon
@@ -40,6 +41,7 @@ define Package/luci-app-regmon/install
 		$(INSTALL_DIR) $(1)/etc/config
 		$(INSTALL_DIR) $(1)/etc/uci-defaults
 		$(INSTALL_DIR) $(1)/usr/bin
+		$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-app-regmon.json $(1)/usr/share/rpcd/acl.d/luci-app-regmon.json
 		$(INSTALL_BIN) ./root/etc/init.d/luci-app-regmon $(1)/etc/init.d/luci-app-regmon
 		$(INSTALL_DATA) ./root/etc/config/regmon $(1)/etc/config/regmon
 		$(INSTALL_BIN) ./root/usr/bin/regmon-genconfig $(1)/usr/bin/regmon-genconfig
