@@ -4,16 +4,17 @@
 		"read": {
 			"cgi-io": [ "list", "read" ],
 			"file": {
-                "/sys/kernel/debug/ieee80211/phy0/regmon": [ "read" ]
+				"/sys/kernel/debug/ieee80211/phy0/regmon": [ "read" ],
+				"/sys/kernel/debug/ieee80211/phy1/regmon": [ "read" ]
 			},
 			"uci": [ "regmon" ]
 		},
 		"write": {
-			"uci": [ "regmon" ],
-            "file": {
-                "/tmp/regmon": [ "write" ],
-                "/etc/collectd.conf": [ "write" ]
-                }
+			"file": {
+				"/tmp/regmon": [ "write" ],
+				"/etc/collectd.conf": [ "write" ]
+			},
+			"uci": [ "regmon" ]
 		}
 	}
 }
