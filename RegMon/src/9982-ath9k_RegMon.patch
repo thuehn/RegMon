@@ -1,5 +1,7 @@
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+Index: backports-5.10.16-1/drivers/net/wireless/ath/ath9k/ath9k.h
+===================================================================
+--- backports-5.10.16-1.orig/drivers/net/wireless/ath/ath9k/ath9k.h
++++ backports-5.10.16-1/drivers/net/wireless/ath/ath9k/ath9k.h
 @@ -32,6 +32,16 @@
  #include "mci.h"
  #include "dfs.h"
@@ -17,7 +19,7 @@
  struct ath_node;
  struct ath_vif;
  
-@@ -999,6 +1009,14 @@ struct ath9k_gpio_chip {
+@@ -1000,6 +1010,14 @@ struct ath9k_gpio_chip {
  };
  #endif
  
@@ -32,13 +34,13 @@
  struct ath_softc {
  	struct ieee80211_hw *hw;
  	struct device *dev;
-@@ -1065,6 +1083,21 @@ struct ath_softc {
+@@ -1066,6 +1084,21 @@ struct ath_softc {
  
  #ifdef CPTCFG_ATH9K_DEBUGFS
  	struct ath9k_debug debug;
 +
 +	/* RegMon */
-+	s64 *reg_hosttime;
++	u64 *reg_hosttime;
 +	u32 reg_interval;
 +	u32 reg_hz;
 +	u32 reg[MAX_REG_COUNT];
@@ -54,9 +56,11 @@
  #endif
  	struct delayed_work hw_check_work;
  	struct delayed_work hw_pll_work;
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -33,6 +33,160 @@ struct ath9k_eeprom_ctx {
+Index: backports-5.10.16-1/drivers/net/wireless/ath/ath9k/init.c
+===================================================================
+--- backports-5.10.16-1.orig/drivers/net/wireless/ath/ath9k/init.c
++++ backports-5.10.16-1/drivers/net/wireless/ath/ath9k/init.c
+@@ -33,6 +33,159 @@ struct ath9k_eeprom_ctx {
  	struct ath_hw *ah;
  };
  
@@ -71,19 +75,20 @@
 +	size_t sum = 0;
 +	u8 i;
 +	loff_t pos;
-+	u64 time_in_ms;
-+	u32 time_rem_in_ns;
++	u64 time_in_sec;
++	u32 time_part_in_nanosec;
 +
 +	spin_lock_bh(&sc->reg_lock);
 +
 +	while (sc->reg_last != sc->reg_current && count > 0) {
 +		spin_unlock_bh(&sc->reg_lock);
 +
-+		/* first entry host time, second wifi cards mac time */
-+		time_in_ms = sc->reg_hosttime[sc->reg_last];
-+		time_rem_in_ns = do_div(time_in_ms, 1000000000);
-+		len = scnprintf(buf, sizeof(buf), "%.10lld,%.10d,0x%x%.8x",
-+				time_in_ms, time_rem_in_ns,
++		time_in_sec = sc->reg_hosttime[sc->reg_last];
++		time_part_in_nanosec = do_div(time_in_sec, 1000000000);
++
++		/* first host time in sec, in nano sec, wifi cards mac time */
++		len = scnprintf(buf, sizeof(buf), "%.10llu,%.10u,0x%x%.8x",
++				time_in_sec, time_part_in_nanosec,
 +				(unsigned int) sc->reg_log[0][sc->reg_last],
 +				(unsigned int) sc->reg_log[1][sc->reg_last]);
 +
@@ -149,15 +154,13 @@
 +	struct hrtimer_mod  *hrtm = container_of(hrtimer, struct hrtimer_mod, timer);
 +	struct ath_softc *sc = container_of(hrtm, struct ath_softc, hrtm);
 +	struct ath_hw *ah = sc->sc_ah;
-+	static struct timespec ts;
 +	int i;
 +
 +	if (sc->shutdown)
 +		return HRTIMER_NORESTART;
 +
 +	/* get current kernel time per row */
-+	getnstimeofday(&ts);
-+	sc->reg_hosttime[sc->reg_current] = timespec_to_ns(&ts);
++	sc->reg_hosttime[sc->reg_current] = ktime_get_real_fast_ns();
 +
 +	/* get upper 32-bit tsf timestamp from card */
 +	sc->reg_log[0][sc->reg_current] = REG_READ(ah, 0x8050);
@@ -217,7 +220,7 @@
  static char *dev_info = "ath9k";
  
  MODULE_AUTHOR("Atheros Communications");
-@@ -1056,6 +1210,12 @@ int ath9k_init_device(u16 devid, struct
+@@ -1056,6 +1209,12 @@ int ath9k_init_device(u16 devid, struct
  	struct ath_hw *ah;
  	int error = 0;
  	struct ath_regulatory *reg;
@@ -230,13 +233,13 @@
  
  	/* Bring up device */
  	error = ath9k_init_softc(devid, sc, bus_ops);
-@@ -1106,6 +1266,45 @@ int ath9k_init_device(u16 devid, struct
+@@ -1106,6 +1265,45 @@ int ath9k_init_device(u16 devid, struct
  		goto unregister;
  	}
  
 +#ifdef CPTCFG_ATH9K_DEBUGFS
 +	/* RegMon debugfs entries */
-+	sc->reg_hosttime = kmalloc(REG_LOG_ROWS * sizeof(s64), GFP_KERNEL);
++	sc->reg_hosttime = kmalloc(REG_LOG_ROWS * sizeof(u64), GFP_KERNEL);
 +
 +	for (i = 0; i < MAX_REG_COUNT; i++)
 +		sc->reg_log[i] = kmalloc(REG_LOG_ROWS * sizeof(u32), GFP_KERNEL);
@@ -276,7 +279,7 @@
  	/* Handle world regulatory */
  	if (!ath_is_world_regd(reg)) {
  		error = regulatory_hint(hw->wiphy, reg->alpha2);
-@@ -1137,6 +1336,9 @@ deinit:
+@@ -1137,6 +1335,9 @@ deinit:
  static void ath9k_deinit_softc(struct ath_softc *sc)
  {
  	int i = 0;
@@ -286,7 +289,7 @@
  
  	ath9k_deinit_p2p(sc);
  	ath9k_deinit_btcoex(sc);
-@@ -1150,6 +1352,21 @@ static void ath9k_deinit_softc(struct at
+@@ -1150,6 +1351,21 @@ static void ath9k_deinit_softc(struct at
  	if (sc->dfs_detector != NULL)
  		sc->dfs_detector->exit(sc->dfs_detector);
  
@@ -308,9 +311,11 @@
  	ath9k_eeprom_release(sc);
  }
  
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -101,9 +101,17 @@ void ath_ps_full_sleep(struct timer_list
+Index: backports-5.10.16-1/drivers/net/wireless/ath/ath9k/main.c
+===================================================================
+--- backports-5.10.16-1.orig/drivers/net/wireless/ath/ath9k/main.c
++++ backports-5.10.16-1/drivers/net/wireless/ath/ath9k/main.c
+@@ -103,9 +103,17 @@ void ath_ps_full_sleep(struct timer_list
  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
  	unsigned long flags;
  	bool reset;
@@ -328,7 +333,7 @@
  	spin_unlock_irqrestore(&common->cc_lock, flags);
  
  	ath9k_hw_setrxabort(sc->sc_ah, 1);
-@@ -215,6 +223,13 @@ static bool ath_prepare_reset(struct ath
+@@ -217,6 +225,13 @@ static bool ath_prepare_reset(struct ath
  {
  	struct ath_hw *ah = sc->sc_ah;
  	bool ret = true;
@@ -342,7 +347,7 @@
  
  	ieee80211_stop_queues(sc->hw);
  	ath_stop_ani(sc);
-@@ -278,6 +293,14 @@ static bool ath_complete_reset(struct at
+@@ -280,6 +295,14 @@ static bool ath_complete_reset(struct at
  	ieee80211_wake_queues(sc->hw);
  	ath9k_p2p_ps_timer(sc);
  
@@ -357,7 +362,7 @@
  	return true;
  }
  
-@@ -751,6 +774,16 @@ static int ath9k_start(struct ieee80211_
+@@ -753,6 +776,16 @@ static int ath9k_start(struct ieee80211_
  
  	ath9k_ps_restore(sc);
  
@@ -374,7 +379,7 @@
  	return 0;
  }
  
-@@ -837,6 +870,14 @@ static void ath9k_stop(struct ieee80211_
+@@ -839,6 +872,14 @@ static void ath9k_stop(struct ieee80211_
  	struct ath_hw *ah = sc->sc_ah;
  	struct ath_common *common = ath9k_hw_common(ah);
  	bool prev_idle;
