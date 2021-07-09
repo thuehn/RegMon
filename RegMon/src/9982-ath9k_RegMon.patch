@@ -87,7 +87,7 @@ Index: backports-5.10.16-1/drivers/net/wireless/ath/ath9k/init.c
 +		time_part_in_nanosec = do_div(time_in_sec, 1000000000);
 +
 +		/* first host time in sec, in nano sec, wifi cards mac time */
-+		len = scnprintf(buf, sizeof(buf), "%.10llu,%.10u,0x%x%.8x",
++		len = scnprintf(buf, sizeof(buf), "%.10llu,%.9u,0x%x%.8x",
 +				time_in_sec, time_part_in_nanosec,
 +				(unsigned int) sc->reg_log[0][sc->reg_last],
 +				(unsigned int) sc->reg_log[1][sc->reg_last]);
